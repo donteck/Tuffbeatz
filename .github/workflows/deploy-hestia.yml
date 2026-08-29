@@ -53,6 +53,8 @@ jobs:
         shell: bash
         run: |
           rsync -az --delete \
+            --exclude 'assets/images/' \
+            --exclude 'screenshot.*' \
             -e "ssh -p ${{ secrets.HESTIA_PORT }}" \
             tuff-beatz/ \
             "${{ secrets.HESTIA_USER }}@${{ secrets.HESTIA_HOST }}:${{ secrets.HESTIA_THEME_PATH }}/"
