@@ -1,0 +1,69 @@
+name: Deploy TUFF BEATZ to Hestia
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "tuff-beatz/**"
+      - ".github/workflows/deploy-hestia.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: tuff-beatz-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy WordPress Theme
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure SSH
+        shell: bash
+        run: |
+          mkdir -p ~/.ssh
+          printf "%s" "${{ secrets.HESTIA_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p "${{ secrets.HESTIA_PORT }}" "${{ secrets.HESTIA_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Test Hestia connection
+        shell: bash
+        run: |
+          ssh -p "${{ secrets.HESTIA_PORT }}" \
+            "${{ secrets.HESTIA_USER }}@${{ secrets.HESTIA_HOST }}" \
+            "echo 'Connected to Hestia successfully'"
+
+      - name: Backup current theme
+        shell: bash
+        run: |
+          ssh -p "${{ secrets.HESTIA_PORT }}" \
+            "${{ secrets.HESTIA_USER }}@${{ secrets.HESTIA_HOST }}" \
+            "if [ -d '${{ secrets.HESTIA_THEME_PATH }}' ]; then \
+               mkdir -p '${{ secrets.HESTIA_BACKUP_PATH }}'; \
+               tar -czf '${{ secrets.HESTIA_BACKUP_PATH }}/tuff-beatz-$(date +%Y%m%d-%H%M%S).tar.gz' \
+               -C '$(dirname \"${{ secrets.HESTIA_THEME_PATH }}\")' \
+               '$(basename \"${{ secrets.HESTIA_THEME_PATH }}\")'; \
+             fi"
+
+      - name: Deploy theme with rsync
+        shell: bash
+        run: |
+          rsync -az --delete \
+            -e "ssh -p ${{ secrets.HESTIA_PORT }}" \
+            tuff-beatz/ \
+            "${{ secrets.HESTIA_USER }}@${{ secrets.HESTIA_HOST }}:${{ secrets.HESTIA_THEME_PATH }}/"
+
+      - name: Fix WordPress permissions
+        shell: bash
+        run: |
+          ssh -p "${{ secrets.HESTIA_PORT }}" \
+            "${{ secrets.HESTIA_USER }}@${{ secrets.HESTIA_HOST }}" \
+            "find '${{ secrets.HESTIA_THEME_PATH }}' -type d -exec chmod 755 {} \; && \
+             find '${{ secrets.HESTIA_THEME_PATH }}' -type f -exec chmod 644 {} \;"
+
+      - name: Deployment complete
+        run: echo "TUFF BEATZ theme deployed successfully."
