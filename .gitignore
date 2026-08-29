@@ -1,0 +1,21 @@
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local secrets
+.env
+.env.*
+*.pem
+*.key
+
+# Build/temp
+*.log
+*.tmp
+*.bak
+node_modules/
+
+# WordPress uploads/backups should not be committed
+wp-content/uploads/
+backups/
