@@ -16,13 +16,16 @@ function tuff_beatz_assets() {
     $ver = wp_get_theme()->get('Version');
     $css_path = get_template_directory() . '/assets/css/main.css';
     $restore_path = get_template_directory() . '/assets/css/v34-frontend-restore.css';
+    $parity_path = get_template_directory() . '/assets/css/v34-reference-parity.css';
     $js_path = get_template_directory() . '/assets/js/main.js';
     $css_ver = $ver . '.' . (file_exists($css_path) ? filemtime($css_path) : time());
     $restore_ver = $ver . '.' . (file_exists($restore_path) ? filemtime($restore_path) : time());
+    $parity_ver = $ver . '.' . (file_exists($parity_path) ? filemtime($parity_path) : time());
     $js_ver = $ver . '.' . (file_exists($js_path) ? filemtime($js_path) : time());
     wp_enqueue_style('tuff-beatz-fonts', 'https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@300;400;500;600;700&family=Parisienne&display=swap', array(), null);
     wp_enqueue_style('tuff-beatz-main', get_template_directory_uri() . '/assets/css/main.css', array('tuff-beatz-fonts'), $css_ver);
     wp_enqueue_style('tuff-beatz-v34-restore', get_template_directory_uri() . '/assets/css/v34-frontend-restore.css', array('tuff-beatz-main'), $restore_ver);
+    wp_enqueue_style('tuff-beatz-v34-parity', get_template_directory_uri() . '/assets/css/v34-reference-parity.css', array('tuff-beatz-v34-restore'), $parity_ver);
     wp_enqueue_script('tuff-beatz-main', get_template_directory_uri() . '/assets/js/main.js', array(), $js_ver, true);
 }
 add_action('wp_enqueue_scripts', 'tuff_beatz_assets');
