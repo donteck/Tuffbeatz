@@ -6,7 +6,7 @@
     </div>
     <div class="footer-contact">
       <p>Ready to build the sound?</p>
-      <a class="btn btn-gold" href="mailto:<?php echo esc_attr(tuff_beatz_get('contact_email', get_option('admin_email'))); ?>">Start a Project</a>
+      <a class="btn btn-gold" href="<?php echo esc_url(home_url('/start-a-project/')); ?>">Start a Project</a>
     </div>
     <div class="social-links">
       <a href="<?php echo esc_url(tuff_beatz_get('instagram_url', '#contact')); ?>" target="_blank" rel="noopener">Instagram</a>
