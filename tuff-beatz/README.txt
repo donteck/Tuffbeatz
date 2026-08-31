@@ -43,3 +43,6 @@ Never commit Hestia credentials, private SSH keys, server secrets or passwords t
 
 NOTE ON CONTINUOUS PLAYBACK
 Playback continues while scrolling and interacting within the currently loaded page. Normal full WordPress page navigation reloads browser audio. True cross-page continuous playback can be added later with PJAX/SPA-style navigation.
+
+RESTORE STATUS
+This repository was intentionally restored to the approved TUFF BEATZ V3.4 production baseline on August 31, 2026.
