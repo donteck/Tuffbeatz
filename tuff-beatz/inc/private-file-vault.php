@@ -68,7 +68,10 @@ function tuff_beatz_vault_save_files($request_id, $input_name='project_files', $
         $existing[] = $record;
         $added[] = $record;
     }
-    if ($added) update_post_meta($request_id, '_tb_vault_files', $existing);
+    if ($added) {
+        update_post_meta($request_id, '_tb_vault_files', $existing);
+        do_action('tuff_beatz_vault_files_added', $request_id, $added, sanitize_key($category), sanitize_text_field($version));
+    }
     return $added;
 }
 
