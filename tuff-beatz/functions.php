@@ -161,5 +161,6 @@ add_action('wp_enqueue_scripts', 'tuff_beatz_player_data', 30);
 function tuff_beatz_body_player_class($classes) { $classes[] = 'tb-has-player'; return $classes; }
 add_filter('body_class', 'tuff_beatz_body_player_class');
 
+require_once get_template_directory() . '/inc/private-file-vault.php';
 require_once get_template_directory() . '/inc/project-portal.php';
 require_once get_template_directory() . '/inc/project-dashboard.php';
