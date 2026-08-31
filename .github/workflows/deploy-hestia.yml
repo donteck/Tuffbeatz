@@ -24,23 +24,39 @@ jobs:
 
       - name: Configure SSH
         shell: bash
+        env:
+          HESTIA_SSH_KEY: ${{ secrets.HESTIA_SSH_KEY }}
+          HESTIA_PORT: ${{ secrets.HESTIA_PORT }}
+          HESTIA_HOST: ${{ secrets.HESTIA_HOST }}
         run: |
           mkdir -p ~/.ssh
-          printf "%s" "${{ secrets.HESTIA_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 700 ~/.ssh
+
+          # Normalize Windows line endings and guarantee a final newline.
+          printf '%s\n' "$HESTIA_SSH_KEY" | tr -d '\r' > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -p "${{ secrets.HESTIA_PORT }}" "${{ secrets.HESTIA_HOST }}" >> ~/.ssh/known_hosts
+
+          # Fail early with a clear message if the secret is not a valid private key.
+          ssh-keygen -y -f ~/.ssh/id_ed25519 > /dev/null
+
+          ssh-keyscan -p "$HESTIA_PORT" "$HESTIA_HOST" >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
 
       - name: Test Hestia connection
         shell: bash
         run: |
-          ssh -p "${{ secrets.HESTIA_PORT }}" \
+          ssh -i ~/.ssh/id_ed25519 \
+            -o IdentitiesOnly=yes \
+            -p "${{ secrets.HESTIA_PORT }}" \
             "${{ secrets.HESTIA_USER }}@${{ secrets.HESTIA_HOST }}" \
             "echo 'Connected to Hestia successfully'"
 
       - name: Backup current theme
         shell: bash
         run: |
-          ssh -p "${{ secrets.HESTIA_PORT }}" \
+          ssh -i ~/.ssh/id_ed25519 \
+            -o IdentitiesOnly=yes \
+            -p "${{ secrets.HESTIA_PORT }}" \
             "${{ secrets.HESTIA_USER }}@${{ secrets.HESTIA_HOST }}" \
             "if [ -d '${{ secrets.HESTIA_THEME_PATH }}' ]; then \
                mkdir -p '${{ secrets.HESTIA_BACKUP_PATH }}'; \
@@ -55,14 +71,16 @@ jobs:
           rsync -az --delete \
             --exclude 'assets/images/' \
             --exclude 'screenshot.*' \
-            -e "ssh -p ${{ secrets.HESTIA_PORT }}" \
+            -e "ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes -p ${{ secrets.HESTIA_PORT }}" \
             tuff-beatz/ \
             "${{ secrets.HESTIA_USER }}@${{ secrets.HESTIA_HOST }}:${{ secrets.HESTIA_THEME_PATH }}/"
 
       - name: Fix WordPress permissions
         shell: bash
         run: |
-          ssh -p "${{ secrets.HESTIA_PORT }}" \
+          ssh -i ~/.ssh/id_ed25519 \
+            -o IdentitiesOnly=yes \
+            -p "${{ secrets.HESTIA_PORT }}" \
             "${{ secrets.HESTIA_USER }}@${{ secrets.HESTIA_HOST }}" \
             "find '${{ secrets.HESTIA_THEME_PATH }}' -type d -exec chmod 755 {} \; && \
              find '${{ secrets.HESTIA_THEME_PATH }}' -type f -exec chmod 644 {} \;"
