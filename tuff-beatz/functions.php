@@ -76,3 +76,4 @@ require_once get_template_directory() . '/inc/private-file-vault.php';
 require_once get_template_directory() . '/inc/project-portal.php';
 require_once get_template_directory() . '/inc/project-dashboard.php';
 require_once get_template_directory() . '/inc/project-invoicing.php';
+require_once get_template_directory() . '/inc/portal-hubs.php';
