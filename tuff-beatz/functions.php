@@ -14,10 +14,15 @@ add_action('after_setup_theme', 'tuff_beatz_setup');
 
 function tuff_beatz_assets() {
     $ver = wp_get_theme()->get('Version');
-    $css_ver = $ver . '.' . filemtime(get_template_directory() . '/assets/css/main.css');
-    $js_ver  = $ver . '.' . filemtime(get_template_directory() . '/assets/js/main.js');
+    $css_path = get_template_directory() . '/assets/css/main.css';
+    $restore_path = get_template_directory() . '/assets/css/v34-frontend-restore.css';
+    $js_path = get_template_directory() . '/assets/js/main.js';
+    $css_ver = $ver . '.' . (file_exists($css_path) ? filemtime($css_path) : time());
+    $restore_ver = $ver . '.' . (file_exists($restore_path) ? filemtime($restore_path) : time());
+    $js_ver = $ver . '.' . (file_exists($js_path) ? filemtime($js_path) : time());
     wp_enqueue_style('tuff-beatz-fonts', 'https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@300;400;500;600;700&family=Parisienne&display=swap', array(), null);
-    wp_enqueue_style('tuff-beatz-main', get_template_directory_uri() . '/assets/css/main.css', array(), $css_ver);
+    wp_enqueue_style('tuff-beatz-main', get_template_directory_uri() . '/assets/css/main.css', array('tuff-beatz-fonts'), $css_ver);
+    wp_enqueue_style('tuff-beatz-v34-restore', get_template_directory_uri() . '/assets/css/v34-frontend-restore.css', array('tuff-beatz-main'), $restore_ver);
     wp_enqueue_script('tuff-beatz-main', get_template_directory_uri() . '/assets/js/main.js', array(), $js_ver, true);
 }
 add_action('wp_enqueue_scripts', 'tuff_beatz_assets');
@@ -103,53 +108,21 @@ function tuff_beatz_project_audio_box($post) {
     $buy = get_post_meta($post->ID, '_tb_buy_url', true);
     ?>
     <style>.tb-admin-field{margin:0 0 16px}.tb-admin-field label{display:block;font-weight:700;margin-bottom:5px}.tb-admin-field input{width:100%}</style>
-    <div class="tb-admin-field">
-      <label for="tb_artist_name">Artist name</label>
-      <input id="tb_artist_name" name="tb_artist_name" value="<?php echo esc_attr($artist); ?>" placeholder="Sean Davz">
-    </div>
-    <div class="tb-admin-field">
-      <label for="tb_audio_url">Audio preview / MP3 URL</label>
-      <input id="tb_audio_url" name="tb_audio_url" value="<?php echo esc_attr($audio); ?>" placeholder="https://.../song.mp3">
-      <p class="description">Upload an MP3 to Media Library, then paste its file URL here.</p>
-    </div>
-    <div class="tb-admin-field">
-      <label for="tb_stream_url">Listen / Smart Link</label>
-      <input id="tb_stream_url" name="tb_stream_url" value="<?php echo esc_attr($stream); ?>" placeholder="https://open.spotify.com/...">
-    </div>
-    <div class="tb-admin-field">
-      <label for="tb_buy_url">Buy / License Link (optional)</label>
-      <input id="tb_buy_url" name="tb_buy_url" value="<?php echo esc_attr($buy); ?>" placeholder="https://...">
-    </div>
-    <div class="tb-admin-field">
-      <label for="tb_genre">Genre</label>
-      <input id="tb_genre" name="tb_genre" value="<?php echo esc_attr(get_post_meta($post->ID, '_tb_genre', true)); ?>" placeholder="Kompa / Afrobeats / R&B">
-    </div>
-    <div class="tb-admin-field">
-      <label for="tb_bpm">BPM</label>
-      <input id="tb_bpm" name="tb_bpm" value="<?php echo esc_attr(get_post_meta($post->ID, '_tb_bpm', true)); ?>" placeholder="104">
-    </div>
-    <div class="tb-admin-field">
-      <label for="tb_key">Key</label>
-      <input id="tb_key" name="tb_key" value="<?php echo esc_attr(get_post_meta($post->ID, '_tb_key', true)); ?>" placeholder="F# Minor">
-    </div>
+    <div class="tb-admin-field"><label for="tb_artist_name">Artist name</label><input id="tb_artist_name" name="tb_artist_name" value="<?php echo esc_attr($artist); ?>" placeholder="Sean Davz"></div>
+    <div class="tb-admin-field"><label for="tb_audio_url">Audio preview / MP3 URL</label><input id="tb_audio_url" name="tb_audio_url" value="<?php echo esc_attr($audio); ?>" placeholder="https://.../song.mp3"><p class="description">Upload an MP3 to Media Library, then paste its file URL here.</p></div>
+    <div class="tb-admin-field"><label for="tb_stream_url">Listen / Smart Link</label><input id="tb_stream_url" name="tb_stream_url" value="<?php echo esc_attr($stream); ?>" placeholder="https://open.spotify.com/..."></div>
+    <div class="tb-admin-field"><label for="tb_buy_url">Buy / License Link (optional)</label><input id="tb_buy_url" name="tb_buy_url" value="<?php echo esc_attr($buy); ?>" placeholder="https://..."></div>
+    <div class="tb-admin-field"><label for="tb_genre">Genre</label><input id="tb_genre" name="tb_genre" value="<?php echo esc_attr(get_post_meta($post->ID, '_tb_genre', true)); ?>" placeholder="Kompa / Afrobeats / R&B"></div>
+    <div class="tb-admin-field"><label for="tb_bpm">BPM</label><input id="tb_bpm" name="tb_bpm" value="<?php echo esc_attr(get_post_meta($post->ID, '_tb_bpm', true)); ?>" placeholder="104"></div>
+    <div class="tb-admin-field"><label for="tb_key">Key</label><input id="tb_key" name="tb_key" value="<?php echo esc_attr(get_post_meta($post->ID, '_tb_key', true)); ?>" placeholder="F# Minor"></div>
     <?php
 }
 
 function tuff_beatz_save_project_audio($post_id) {
-    if (!isset($_POST['tuff_beatz_project_audio_nonce']) ||
-        !wp_verify_nonce($_POST['tuff_beatz_project_audio_nonce'], 'tuff_beatz_save_project_audio')) return;
+    if (!isset($_POST['tuff_beatz_project_audio_nonce']) || !wp_verify_nonce($_POST['tuff_beatz_project_audio_nonce'], 'tuff_beatz_save_project_audio')) return;
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
     if (!current_user_can('edit_post', $post_id)) return;
-
-    $map = array(
-        'tb_audio_url' => '_tb_audio_url',
-        'tb_artist_name' => '_tb_artist_name',
-        'tb_stream_url' => '_tb_stream_url',
-        'tb_buy_url' => '_tb_buy_url',
-        'tb_genre' => '_tb_genre',
-        'tb_bpm' => '_tb_bpm',
-        'tb_key' => '_tb_key',
-    );
+    $map = array('tb_audio_url'=>'_tb_audio_url','tb_artist_name'=>'_tb_artist_name','tb_stream_url'=>'_tb_stream_url','tb_buy_url'=>'_tb_buy_url','tb_genre'=>'_tb_genre','tb_bpm'=>'_tb_bpm','tb_key'=>'_tb_key');
     foreach ($map as $field => $meta) {
         if (isset($_POST[$field])) {
             $value = in_array($field, array('tb_artist_name','tb_genre','tb_bpm','tb_key'), true) ? sanitize_text_field($_POST[$field]) : esc_url_raw($_POST[$field]);
@@ -161,30 +134,16 @@ add_action('save_post_tb_project', 'tuff_beatz_save_project_audio');
 
 function tuff_beatz_player_tracks() {
     $tracks = array();
-    $q = new WP_Query(array(
-        'post_type' => 'tb_project',
-        'posts_per_page' => 30,
-        'post_status' => 'publish',
-        'meta_query' => array(
-            array('key' => '_tb_audio_url', 'compare' => 'EXISTS')
-        )
-    ));
+    $q = new WP_Query(array('post_type'=>'tb_project','posts_per_page'=>30,'post_status'=>'publish','meta_query'=>array(array('key'=>'_tb_audio_url','compare'=>'EXISTS'))));
     while ($q->have_posts()) {
         $q->the_post();
         $audio = get_post_meta(get_the_ID(), '_tb_audio_url', true);
         if (!$audio) continue;
         $tracks[] = array(
-            'id' => get_the_ID(),
-            'title' => get_the_title(),
-            'artist' => get_post_meta(get_the_ID(), '_tb_artist_name', true) ?: 'TUFF BEATZ',
-            'audio' => esc_url_raw($audio),
-            'cover' => get_the_post_thumbnail_url(get_the_ID(), 'medium') ?: get_template_directory_uri() . '/assets/images/tuff-beatz-logo.png',
-            'url' => get_permalink(),
-            'stream' => get_post_meta(get_the_ID(), '_tb_stream_url', true),
-            'buy' => get_post_meta(get_the_ID(), '_tb_buy_url', true),
-            'genre' => get_post_meta(get_the_ID(), '_tb_genre', true),
-            'bpm' => get_post_meta(get_the_ID(), '_tb_bpm', true),
-            'key' => get_post_meta(get_the_ID(), '_tb_key', true),
+            'id'=>get_the_ID(),'title'=>get_the_title(),'artist'=>get_post_meta(get_the_ID(), '_tb_artist_name', true) ?: 'TUFF BEATZ','audio'=>esc_url_raw($audio),
+            'cover'=>get_the_post_thumbnail_url(get_the_ID(), 'medium') ?: get_template_directory_uri() . '/assets/images/tuff-beatz-logo.png','url'=>get_permalink(),
+            'stream'=>get_post_meta(get_the_ID(), '_tb_stream_url', true),'buy'=>get_post_meta(get_the_ID(), '_tb_buy_url', true),'genre'=>get_post_meta(get_the_ID(), '_tb_genre', true),
+            'bpm'=>get_post_meta(get_the_ID(), '_tb_bpm', true),'key'=>get_post_meta(get_the_ID(), '_tb_key', true),
         );
     }
     wp_reset_postdata();
@@ -192,17 +151,11 @@ function tuff_beatz_player_tracks() {
 }
 
 function tuff_beatz_player_data() {
-    wp_localize_script('tuff-beatz-main', 'TUFF_BEATZ_PLAYER', array(
-        'tracks' => tuff_beatz_player_tracks(),
-        'logo' => get_template_directory_uri() . '/assets/images/tuff-beatz-logo.png',
-    ));
+    wp_localize_script('tuff-beatz-main', 'TUFF_BEATZ_PLAYER', array('tracks'=>tuff_beatz_player_tracks(),'logo'=>get_template_directory_uri() . '/assets/images/tuff-beatz-logo.png'));
 }
 add_action('wp_enqueue_scripts', 'tuff_beatz_player_data', 30);
 
-function tuff_beatz_body_player_class($classes) {
-    $classes[] = 'tb-has-player';
-    return $classes;
-}
+function tuff_beatz_body_player_class($classes) { $classes[] = 'tb-has-player'; return $classes; }
 add_filter('body_class', 'tuff_beatz_body_player_class');
 
 require_once get_template_directory() . '/inc/project-portal.php';
