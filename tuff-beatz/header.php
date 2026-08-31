@@ -26,6 +26,10 @@
       <a href="<?php echo esc_url($tb_home_prefix . '#studio'); ?>">Studio</a>
       <a href="<?php echo esc_url($tb_home_prefix . '#contact'); ?>">Contact</a>
     </nav>
-    <a class="btn btn-outline header-cta" href="<?php echo esc_url(home_url('/start-a-project/')); ?>">Work With Me</a>
+    <?php if(is_user_logged_in() && function_exists('tuff_beatz_portal_account_url')): ?>
+      <a class="btn btn-outline header-cta" href="<?php echo esc_url(tuff_beatz_portal_account_url()); ?>">My Portal</a>
+    <?php else: ?>
+      <a class="btn btn-outline header-cta" href="<?php echo esc_url(home_url('/start-a-project/')); ?>">Work With Me</a>
+    <?php endif; ?>
   </div>
 </header>
