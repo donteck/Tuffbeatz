@@ -1,0 +1,74 @@
+/* TUFF BEATZ V3.4 reference parity
+   Approved HTML reference: tuff-beatz-v3.4-html-front-page-real-logo-player
+   This file only corrects remaining visual drift after the master restoration. */
+
+/* Remove decorative additions that were not part of the approved V3.4 HTML composition. */
+.hero::before,.hero::after,.tb-featured::before{display:none!important}
+
+/* Hero proportions from the approved V3.4 preview. */
+.site-header{z-index:100}
+.nav-wrap{height:82px}
+.main-nav{gap:26px}
+.hero{padding-top:105px}
+.hero-grid{min-height:610px;grid-template-columns:.9fr 1fr 1.2fr;gap:18px;align-items:end}
+.hero-logo{filter:drop-shadow(0 25px 38px #000)}
+.hero-person{height:550px;object-position:center 24%;border-radius:190px 190px 0 0;filter:brightness(.74) saturate(.86);mask-image:linear-gradient(#000 0 80%,transparent 100%)}
+.hero-copy{padding-bottom:65px}
+.hero .eyebrow{font-size:11px;letter-spacing:.22em}
+.producer-name{font-size:19px;letter-spacing:.22em}
+.hero h1{font-size:58px;margin:15px 0;line-height:1.08}
+.lead{color:#d6cfc5}
+.hero-actions{gap:14px;flex-wrap:wrap;margin-top:28px}
+.genres{min-height:67px;gap:22px;font-size:12px;letter-spacing:.16em;padding:14px}
+
+/* Featured experience — exact V3.4 arrangement. */
+.tb-featured__grid{grid-template-columns:.9fr 1.1fr;gap:70px;align-items:center}
+.tb-featured__visual{min-height:500px}
+.tb-featured__visual img{width:min(430px,82%);filter:drop-shadow(0 30px 55px #000)}
+.tb-featured__ring{width:430px;height:430px;max-width:88%;max-height:88%;box-shadow:0 0 0 40px rgba(213,166,43,.018),0 0 0 80px rgba(213,166,43,.012)}
+.tb-featured__copy h2{font-size:46px}
+.tb-featured__copy>p{color:#c9c1b5}
+.tb-featured__stats{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin:34px 0;padding:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.tb-featured__stats>div{display:block;padding:18px 10px;border-right:1px solid var(--line)}
+.tb-featured__stats>div:first-child{padding-left:10px}
+.tb-featured__stats>div:last-child{border-right:0;padding-right:10px}
+.tb-featured__stats b{display:block;font-family:Georgia,serif;color:var(--gold2);font-size:22px;line-height:1.2}
+.tb-featured__stats span{display:block;font-size:9px;font-weight:400;letter-spacing:.13em;color:#aaa;line-height:1.4}
+
+/* Release cards — restore the premium hover and badge treatment. */
+.tb-release-card{position:relative;transition:transform .35s ease,filter .35s ease}
+.tb-release-card:hover{transform:translateY(-6px)}
+.tb-card-play{all:unset;display:block;width:100%;cursor:pointer}
+.tb-release-card__art{aspect-ratio:1/1;position:relative;display:block;overflow:hidden;border:1px solid rgba(240,199,90,.22);background:radial-gradient(circle at 40% 35%,#5b251b,#17100d 45%,#050505);box-shadow:0 16px 40px rgba(0,0,0,.35);transition:transform .4s ease,filter .4s ease}
+.tb-release-card:hover .tb-release-card__art{transform:scale(1.03);filter:brightness(.72)}
+.tb-release-card__shade{position:absolute;inset:0;background:linear-gradient(180deg,transparent 48%,rgba(0,0,0,.72));pointer-events:none}
+.tb-release-card__tag{position:absolute;top:10px;right:10px;padding:5px 8px;border:1px solid rgba(240,199,90,.6);font-size:8px;letter-spacing:.16em;background:#000a;color:var(--gold2);z-index:3}
+.tb-release-card .play{z-index:3;width:40px;height:40px}
+
+/* Platform/footer spacing from the preview. */
+.platform-links{gap:38px;font-size:18px}
+.site-footer{padding:34px 0 20px}
+.footer-brand{gap:10px}.footer-brand img{width:58px}
+.social-links{gap:15px}
+.footer-bottom{margin-top:20px;padding-top:15px}
+
+@media(max-width:1000px){
+  .main-nav{gap:13px}
+  .hero-grid{grid-template-columns:1fr 1fr}
+  .hero-logo-wrap{display:none}
+  .project-grid{grid-template-columns:repeat(3,1fr)}
+  .tb-featured__grid{grid-template-columns:1fr;gap:20px}
+}
+@media(max-width:760px){
+  .nav-wrap{height:72px}
+  .hero-grid{grid-template-columns:1fr;min-height:auto}
+  .hero-person{height:410px}
+  .hero-copy{text-align:center;padding:0 0 45px}
+  .hero h1{font-size:43px}
+  .hero-actions{justify-content:center}
+  .project-grid{grid-template-columns:repeat(2,1fr)}
+  .music-heading{align-items:flex-start;flex-direction:column}
+  .tb-featured__stats{grid-template-columns:1fr}
+  .tb-featured__stats>div{border-right:0;border-bottom:1px solid var(--line);padding:14px 10px}
+  .tb-featured__stats>div:last-child{border-bottom:0}
+}
