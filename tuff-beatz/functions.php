@@ -79,3 +79,4 @@ require_once get_template_directory() . '/inc/project-invoicing.php';
 require_once get_template_directory() . '/inc/portal-hubs.php';
 require_once get_template_directory() . '/inc/project-notifications.php';
 require_once get_template_directory() . '/inc/client-crm.php';
+require_once get_template_directory() . '/inc/project-file-manager.php';
