@@ -162,3 +162,4 @@ function tuff_beatz_body_player_class($classes) { $classes[] = 'tb-has-player'; 
 add_filter('body_class', 'tuff_beatz_body_player_class');
 
 require_once get_template_directory() . '/inc/project-portal.php';
+require_once get_template_directory() . '/inc/project-dashboard.php';
