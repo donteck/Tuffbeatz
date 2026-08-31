@@ -16,8 +16,14 @@ function tuff_beatz_portal_hub_assets(){
  if(is_page('project-dashboard')&&is_user_logged_in()&&!tuff_beatz_is_producer_user()){
    $css=get_template_directory().'/assets/css/client-workspace-v2.css';
    $js=get_template_directory().'/assets/js/client-workspace-v2.js';
+   $fm=get_template_directory().'/assets/css/studio-file-manager.css';
+   $fmjs=get_template_directory().'/assets/js/studio-file-manager.js';
+   $fd=get_template_directory().'/assets/css/final-delivery.css';
    wp_enqueue_style('tuff-beatz-client-workspace-v2',get_template_directory_uri().'/assets/css/client-workspace-v2.css',array('tuff-beatz-luxury-studio-os'),file_exists($css)?filemtime($css):wp_get_theme()->get('Version'));
+   if(file_exists($fm))wp_enqueue_style('tuff-beatz-studio-file-manager',get_template_directory_uri().'/assets/css/studio-file-manager.css',array('tuff-beatz-client-workspace-v2'),filemtime($fm));
+   if(file_exists($fd))wp_enqueue_style('tuff-beatz-final-delivery',get_template_directory_uri().'/assets/css/final-delivery.css',array('tuff-beatz-client-workspace-v2'),filemtime($fd));
    wp_enqueue_script('tuff-beatz-client-workspace-v2',get_template_directory_uri().'/assets/js/client-workspace-v2.js',array(),file_exists($js)?filemtime($js):wp_get_theme()->get('Version'),true);
+   if(file_exists($fmjs))wp_enqueue_script('tuff-beatz-studio-file-manager',get_template_directory_uri().'/assets/js/studio-file-manager.js',array('tuff-beatz-client-workspace-v2'),filemtime($fmjs),true);
  }
 }
 add_action('wp_enqueue_scripts','tuff_beatz_portal_hub_assets',80);
