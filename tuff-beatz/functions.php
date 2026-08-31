@@ -204,3 +204,5 @@ function tuff_beatz_body_player_class($classes) {
     return $classes;
 }
 add_filter('body_class', 'tuff_beatz_body_player_class');
+
+require_once get_template_directory() . '/inc/project-portal.php';
