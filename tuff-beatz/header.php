@@ -4,6 +4,8 @@
     <meta charset="<?php bloginfo('charset'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php wp_head(); ?>
+    <?php $tb_v34_restore = get_template_directory() . '/assets/css/v34-frontend-restore.css'; ?>
+    <link rel="stylesheet" href="<?php echo esc_url(get_template_directory_uri() . '/assets/css/v34-frontend-restore.css?v=' . (file_exists($tb_v34_restore) ? filemtime($tb_v34_restore) : '3.4')); ?>">
 </head>
 <body <?php body_class(); ?>>
 <?php wp_body_open(); ?>
