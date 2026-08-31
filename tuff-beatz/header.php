@@ -15,13 +15,14 @@
     </a>
     <button class="menu-toggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
     <nav class="main-nav" aria-label="Main navigation">
-      <a href="<?php echo esc_url(home_url('/#home')); ?>">Home</a>
-      <a href="<?php echo esc_url(home_url('/#about')); ?>">About</a>
-      <a href="<?php echo esc_url(home_url('/#music')); ?>">Music</a>
-      <a href="<?php echo esc_url(home_url('/#services')); ?>">Services</a>
-      <a href="<?php echo esc_url(home_url('/#credits')); ?>">Credits</a>
-      <a href="<?php echo esc_url(home_url('/#studio')); ?>">Studio</a>
-      <a href="<?php echo esc_url(home_url('/#contact')); ?>">Contact</a>
+      <?php $tb_home_prefix = is_front_page() ? '' : home_url('/'); ?>
+      <a href="<?php echo esc_url($tb_home_prefix . '#home'); ?>">Home</a>
+      <a href="<?php echo esc_url($tb_home_prefix . '#about'); ?>">About</a>
+      <a href="<?php echo esc_url($tb_home_prefix . '#music'); ?>">Music</a>
+      <a href="<?php echo esc_url($tb_home_prefix . '#services'); ?>">Services</a>
+      <a href="<?php echo esc_url($tb_home_prefix . '#credits'); ?>">Credits</a>
+      <a href="<?php echo esc_url($tb_home_prefix . '#studio'); ?>">Studio</a>
+      <a href="<?php echo esc_url($tb_home_prefix . '#contact'); ?>">Contact</a>
     </nav>
     <a class="btn btn-outline header-cta" href="<?php echo esc_url(home_url('/start-a-project/')); ?>">Work With Me</a>
   </div>
