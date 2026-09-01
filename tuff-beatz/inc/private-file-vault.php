@@ -1,126 +1,19 @@
 <?php
 if (!defined('ABSPATH')) exit;
-
-/**
- * TUFF BEATZ Private File Vault V3
- * Stores unreleased client/project files outside public_html and serves them
- * only after WordPress authorization checks.
- */
-
-function tuff_beatz_vault_root() {
-    $root = trailingslashit(dirname(ABSPATH)) . 'private/tuff-beatz-vault';
-    if (!is_dir($root)) wp_mkdir_p($root);
-    return $root;
-}
-
-function tuff_beatz_vault_allowed_extensions() {
-    return array('wav','aiff','aif','mp3','m4a','zip','pdf','txt','mid','midi');
-}
-
-function tuff_beatz_vault_files($request_id) {
-    $files = get_post_meta((int)$request_id, '_tb_vault_files', true);
-    return is_array($files) ? $files : array();
-}
-
-function tuff_beatz_vault_save_files($request_id, $input_name='project_files', $category='source', $version='') {
-    $request_id = (int)$request_id;
-    if (!$request_id || empty($_FILES[$input_name]['name'])) return array();
-
-    $bundle = $_FILES[$input_name];
-    $is_multi = is_array($bundle['name']);
-    $names = $is_multi ? $bundle['name'] : array($bundle['name']);
-    $types = $is_multi ? $bundle['type'] : array($bundle['type']);
-    $temps = $is_multi ? $bundle['tmp_name'] : array($bundle['tmp_name']);
-    $errors = $is_multi ? $bundle['error'] : array($bundle['error']);
-    $sizes = $is_multi ? $bundle['size'] : array($bundle['size']);
-
-    $allowed = tuff_beatz_vault_allowed_extensions();
-    $existing = tuff_beatz_vault_files($request_id);
-    $added = array();
-    $dir = trailingslashit(tuff_beatz_vault_root()) . 'project-' . $request_id;
-    if (!is_dir($dir)) wp_mkdir_p($dir);
-
-    $count = min(count($names), 20);
-    for ($i=0; $i<$count; $i++) {
-        if (empty($names[$i]) || !empty($errors[$i]) || !is_uploaded_file($temps[$i])) continue;
-        $original = sanitize_file_name($names[$i]);
-        $ext = strtolower(pathinfo($original, PATHINFO_EXTENSION));
-        if (!in_array($ext, $allowed, true)) continue;
-
-        $id = wp_generate_uuid4();
-        $stored = $id . '.' . $ext;
-        $destination = trailingslashit($dir) . $stored;
-        if (!@move_uploaded_file($temps[$i], $destination)) continue;
-        @chmod($destination, 0640);
-
-        $record = array(
-            'id' => $id,
-            'name' => $original,
-            'stored' => $stored,
-            'size' => (int)$sizes[$i],
-            'mime' => sanitize_mime_type($types[$i] ?: 'application/octet-stream'),
-            'category' => sanitize_key($category),
-            'version' => sanitize_text_field($version),
-            'uploaded_by' => get_current_user_id(),
-            'uploaded_at' => current_time('mysql'),
-            'sha256' => @hash_file('sha256', $destination) ?: '',
-        );
-        $existing[] = $record;
-        $added[] = $record;
-    }
-    if ($added) {
-        update_post_meta($request_id, '_tb_vault_files', $existing);
-        do_action('tuff_beatz_vault_files_added', $request_id, $added, sanitize_key($category), sanitize_text_field($version));
-    }
-    return $added;
-}
-
-function tuff_beatz_vault_download_url($request_id, $file_id) {
-    $args = array(
-        'action' => 'tb_vault_download',
-        'request_id' => (int)$request_id,
-        'file_id' => sanitize_text_field($file_id),
-    );
-    $url = add_query_arg($args, admin_url('admin-post.php'));
-    return wp_nonce_url($url, 'tb_vault_download_' . (int)$request_id . '_' . sanitize_text_field($file_id), 'tb_vault_nonce');
-}
-
-function tuff_beatz_vault_find($request_id, $file_id) {
-    foreach (tuff_beatz_vault_files($request_id) as $file) {
-        if (!empty($file['id']) && hash_equals((string)$file['id'], (string)$file_id)) return $file;
-    }
-    return null;
-}
-
-function tuff_beatz_vault_download() {
-    $request_id = (int)($_GET['request_id'] ?? 0);
-    $file_id = sanitize_text_field(wp_unslash($_GET['file_id'] ?? ''));
-    $nonce = sanitize_text_field(wp_unslash($_GET['tb_vault_nonce'] ?? ''));
-
-    if (!is_user_logged_in() || !function_exists('tuff_beatz_user_can_view_request') || !tuff_beatz_user_can_view_request($request_id)) {
-        status_header(403); exit('Access denied.');
-    }
-    if (!$file_id || !wp_verify_nonce($nonce, 'tb_vault_download_' . $request_id . '_' . $file_id)) {
-        status_header(403); exit('Invalid download link.');
-    }
-
-    $file = tuff_beatz_vault_find($request_id, $file_id);
-    if (!$file) { status_header(404); exit('File not found.'); }
-
-    $path = trailingslashit(tuff_beatz_vault_root()) . 'project-' . $request_id . '/' . basename($file['stored']);
-    if (!is_file($path) || !is_readable($path)) { status_header(404); exit('File unavailable.'); }
-
-    nocache_headers();
-    header('X-Content-Type-Options: nosniff');
-    header('Content-Type: application/octet-stream');
-    header('Content-Disposition: attachment; filename="' . rawurlencode($file['name']) . '"; filename*=UTF-8\'\'' . rawurlencode($file['name']));
-    header('Content-Length: ' . filesize($path));
-    while (ob_get_level()) ob_end_clean();
-    readfile($path);
-    exit;
-}
-add_action('admin_post_tb_vault_download', 'tuff_beatz_vault_download');
-
-function tuff_beatz_vault_human_size($bytes) {
-    return size_format((int)$bytes, 1);
-}
+/** TUFF BEATZ Private File Vault V4.1 — protected storage + authenticated Range audio streaming */
+function tuff_beatz_vault_root(){$root=trailingslashit(dirname(ABSPATH)).'private/tuff-beatz-vault';if(!is_dir($root))wp_mkdir_p($root);return $root;}
+function tuff_beatz_vault_allowed_extensions(){return array('wav','aiff','aif','mp3','m4a','zip','pdf','txt','mid','midi');}
+function tuff_beatz_vault_audio_extensions(){return array('wav','aiff','aif','mp3','m4a');}
+function tuff_beatz_vault_files($request_id){$files=get_post_meta((int)$request_id,'_tb_vault_files',true);return is_array($files)?$files:array();}
+function tuff_beatz_vault_save_files($request_id,$input_name='project_files',$category='source',$version=''){$request_id=(int)$request_id;if(!$request_id||empty($_FILES[$input_name]['name']))return array();$bundle=$_FILES[$input_name];$multi=is_array($bundle['name']);$names=$multi?$bundle['name']:array($bundle['name']);$types=$multi?$bundle['type']:array($bundle['type']);$temps=$multi?$bundle['tmp_name']:array($bundle['tmp_name']);$errors=$multi?$bundle['error']:array($bundle['error']);$sizes=$multi?$bundle['size']:array($bundle['size']);$allowed=tuff_beatz_vault_allowed_extensions();$existing=tuff_beatz_vault_files($request_id);$added=array();$dir=trailingslashit(tuff_beatz_vault_root()).'project-'.$request_id;if(!is_dir($dir))wp_mkdir_p($dir);$count=min(count($names),20);for($i=0;$i<$count;$i++){if(empty($names[$i])||!empty($errors[$i])||!is_uploaded_file($temps[$i]))continue;$original=sanitize_file_name($names[$i]);$ext=strtolower(pathinfo($original,PATHINFO_EXTENSION));if(!in_array($ext,$allowed,true))continue;$id=wp_generate_uuid4();$stored=$id.'.'.$ext;$destination=trailingslashit($dir).$stored;if(!@move_uploaded_file($temps[$i],$destination))continue;@chmod($destination,0640);$record=array('id'=>$id,'name'=>$original,'stored'=>$stored,'size'=>(int)$sizes[$i],'mime'=>sanitize_mime_type($types[$i]?:'application/octet-stream'),'category'=>sanitize_key($category),'version'=>sanitize_text_field($version),'uploaded_by'=>get_current_user_id(),'uploaded_at'=>current_time('mysql'),'sha256'=>@hash_file('sha256',$destination)?:'');$existing[]=$record;$added[]=$record;}if($added){update_post_meta($request_id,'_tb_vault_files',$existing);do_action('tuff_beatz_vault_files_added',$request_id,$added,sanitize_key($category),sanitize_text_field($version));}return $added;}
+function tuff_beatz_vault_authorized($request_id,$file_id,$nonce,$action){return is_user_logged_in()&&function_exists('tuff_beatz_user_can_view_request')&&tuff_beatz_user_can_view_request($request_id)&&$file_id&&wp_verify_nonce($nonce,$action.'_'.$request_id.'_'.$file_id);}
+function tuff_beatz_vault_download_url($request_id,$file_id){$args=array('action'=>'tb_vault_download','request_id'=>(int)$request_id,'file_id'=>sanitize_text_field($file_id));return wp_nonce_url(add_query_arg($args,admin_url('admin-post.php')),'tb_vault_download_'.(int)$request_id.'_'.sanitize_text_field($file_id),'tb_vault_nonce');}
+function tuff_beatz_vault_stream_url($request_id,$file_id){$args=array('action'=>'tb_vault_stream','request_id'=>(int)$request_id,'file_id'=>sanitize_text_field($file_id));return wp_nonce_url(add_query_arg($args,admin_url('admin-post.php')),'tb_vault_stream_'.(int)$request_id.'_'.sanitize_text_field($file_id),'tb_vault_nonce');}
+function tuff_beatz_vault_find($request_id,$file_id){foreach(tuff_beatz_vault_files($request_id) as $file){if(!empty($file['id'])&&hash_equals((string)$file['id'],(string)$file_id))return $file;}return null;}
+function tuff_beatz_vault_path($request_id,$file){return trailingslashit(tuff_beatz_vault_root()).'project-'.(int)$request_id.'/'.basename($file['stored']);}
+function tuff_beatz_vault_audio_mime($file){$ext=strtolower(pathinfo($file['name']??'',PATHINFO_EXTENSION));$map=array('mp3'=>'audio/mpeg','m4a'=>'audio/mp4','wav'=>'audio/wav','aiff'=>'audio/aiff','aif'=>'audio/aiff');return $map[$ext]??'application/octet-stream';}
+function tuff_beatz_vault_download(){$id=(int)($_GET['request_id']??0);$fid=sanitize_text_field(wp_unslash($_GET['file_id']??''));$nonce=sanitize_text_field(wp_unslash($_GET['tb_vault_nonce']??''));if(!tuff_beatz_vault_authorized($id,$fid,$nonce,'tb_vault_download')){status_header(403);exit('Access denied.');}$file=tuff_beatz_vault_find($id,$fid);if(!$file){status_header(404);exit('File not found.');}$path=tuff_beatz_vault_path($id,$file);if(!is_file($path)||!is_readable($path)){status_header(404);exit('File unavailable.');}nocache_headers();header('X-Content-Type-Options: nosniff');header('Content-Type: application/octet-stream');header('Content-Disposition: attachment; filename="'.rawurlencode($file['name']).'"; filename*=UTF-8\'\''.rawurlencode($file['name']));header('Content-Length: '.filesize($path));while(ob_get_level())ob_end_clean();readfile($path);exit;}
+add_action('admin_post_tb_vault_download','tuff_beatz_vault_download');
+function tuff_beatz_vault_stream(){$id=(int)($_GET['request_id']??0);$fid=sanitize_text_field(wp_unslash($_GET['file_id']??''));$nonce=sanitize_text_field(wp_unslash($_GET['tb_vault_nonce']??''));if(!tuff_beatz_vault_authorized($id,$fid,$nonce,'tb_vault_stream')){status_header(403);exit('Access denied.');}$file=tuff_beatz_vault_find($id,$fid);if(!$file){status_header(404);exit('File not found.');}$ext=strtolower(pathinfo($file['name']??'',PATHINFO_EXTENSION));if(!in_array($ext,tuff_beatz_vault_audio_extensions(),true)){status_header(415);exit('Audio streaming is not available for this file.');}$path=tuff_beatz_vault_path($id,$file);if(!is_file($path)||!is_readable($path)){status_header(404);exit('File unavailable.');}$size=filesize($path);if($size<1){status_header(404);exit('Empty file.');}$start=0;$end=$size-1;$status=200;$range=$_SERVER['HTTP_RANGE']??'';if($range){if(!preg_match('/bytes=(\d*)-(\d*)/i',$range,$m)){status_header(416);header('Content-Range: bytes */'.$size);exit;}$a=$m[1];$b=$m[2];if($a===''&&$b!==''){$suffix=(int)$b;if($suffix<1){status_header(416);exit;}$start=max(0,$size-$suffix);}else{$start=(int)$a;if($b!=='')$end=min((int)$b,$size-1);}if($start>$end||$start>=$size){status_header(416);header('Content-Range: bytes */'.$size);exit;}$status=206;}$length=$end-$start+1;while(ob_get_level())ob_end_clean();status_header($status);header('X-Content-Type-Options: nosniff');header('Content-Type: '.tuff_beatz_vault_audio_mime($file));header('Content-Disposition: inline; filename="'.rawurlencode($file['name']).'"; filename*=UTF-8\'\''.rawurlencode($file['name']));header('Accept-Ranges: bytes');header('Content-Length: '.$length);if($status===206)header('Content-Range: bytes '.$start.'-'.$end.'/'.$size);header('Cache-Control: private, no-store, max-age=0');$fp=fopen($path,'rb');if(!$fp){status_header(500);exit;}fseek($fp,$start);$remaining=$length;$chunk=1024*1024;while($remaining>0&&!feof($fp)){if(connection_aborted())break;$read=min($chunk,$remaining);$data=fread($fp,$read);if($data===false||$data==='')break;echo $data;$remaining-=strlen($data);flush();}fclose($fp);exit;}
+add_action('admin_post_tb_vault_stream','tuff_beatz_vault_stream');
+function tuff_beatz_vault_human_size($bytes){return size_format((int)$bytes,1);}
