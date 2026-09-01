@@ -1,6 +1,6 @@
 <?php
 if(!defined('ABSPATH'))exit;
-/** TUFF BEATZ Studio OS V13.7 — canonical project authorization boundaries + mutation endpoint policy */
+/** TUFF BEATZ Studio OS V13.7.1 — canonical project authorization boundaries + reconciled mutation endpoint policy */
 function tuff_beatz_auth_is_producer($request_id,$user_id=0){$user_id=$user_id?:get_current_user_id();return $user_id&&user_can($user_id,'edit_post',(int)$request_id);}
 function tuff_beatz_auth_is_owner($request_id,$user_id=0){$user_id=$user_id?:get_current_user_id();$p=get_post((int)$request_id);return $user_id&&$p&&$p->post_type==='tb_request'&&(int)$p->post_author===(int)$user_id;}
 function tuff_beatz_auth_collaborator($request_id,$user_id=0){$user_id=$user_id?:get_current_user_id();return function_exists('tuff_beatz_find_collaborator')?tuff_beatz_find_collaborator((int)$request_id,(int)$user_id):null;}
@@ -15,10 +15,9 @@ function tuff_beatz_auth_action_policy(){return array(
  'tb_conversation_mark_read'=>'view',
  'tb_submit_mix_review'=>'review',
  'tb_approve_mix'=>'approve',
- 'tb_dashboard_upload'=>'upload',
- 'tb_upload_project_files'=>'upload'
+ 'tb_upload_project_dashboard_files'=>'upload'
 );}
-function tuff_beatz_auth_producer_actions(){return array('tb_file_manager_update','tb_file_manager_archive','tb_file_manager_delete','tb_admin_upload_delivery','tb_upload_delivery','tb_producer_audio_upload','tb_add_project_payment');}
+function tuff_beatz_auth_producer_actions(){return array('tb_file_manager_update','tb_file_manager_archive','tb_file_manager_delete','tb_admin_upload_delivery_files','tb_producer_console_upload','tb_add_project_payment');}
 function tuff_beatz_auth_manage_actions(){return array('tb_invite_project_collaborator','tb_remove_project_collaborator');}
 function tuff_beatz_auth_owner_actions(){return array('tb_confirm_final_delivery');}
 function tuff_beatz_auth_request_id(){return (int)($_POST['request_id']??$_GET['request_id']??0);}
