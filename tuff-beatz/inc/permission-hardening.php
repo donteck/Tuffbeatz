@@ -1,7 +1,7 @@
 <?php
 if(!defined('ABSPATH'))exit;
-/** TUFF BEATZ Studio OS V13.7.1 — canonical project authorization boundaries + reconciled mutation endpoint policy */
-function tuff_beatz_auth_is_producer($request_id,$user_id=0){$user_id=$user_id?:get_current_user_id();return $user_id&&user_can($user_id,'edit_post',(int)$request_id);}
+/** TUFF BEATZ Studio OS V13.7.2 — canonical project authorization boundaries + reconciled mutation endpoint policy */
+function tuff_beatz_auth_is_producer($request_id,$user_id=0){$user_id=$user_id?:get_current_user_id();if(!$user_id)return false;if(function_exists('tuff_beatz_is_producer_user'))return tuff_beatz_is_producer_user($user_id);$u=get_user_by('id',$user_id);return $u&&$u->exists()&&(user_can($u,'edit_posts')||user_can($u,'manage_options'));}
 function tuff_beatz_auth_is_owner($request_id,$user_id=0){$user_id=$user_id?:get_current_user_id();$p=get_post((int)$request_id);return $user_id&&$p&&$p->post_type==='tb_request'&&(int)$p->post_author===(int)$user_id;}
 function tuff_beatz_auth_collaborator($request_id,$user_id=0){$user_id=$user_id?:get_current_user_id();return function_exists('tuff_beatz_find_collaborator')?tuff_beatz_find_collaborator((int)$request_id,(int)$user_id):null;}
 function tuff_beatz_auth_can($request_id,$permission='view',$user_id=0){$request_id=(int)$request_id;$user_id=$user_id?:get_current_user_id();if(!$request_id||!$user_id)return false;if(tuff_beatz_auth_is_producer($request_id,$user_id)||tuff_beatz_auth_is_owner($request_id,$user_id))return true;$c=tuff_beatz_auth_collaborator($request_id,$user_id);if(!$c)return false;$allowed=array('view','upload','message','review','approve','billing');if(!in_array($permission,$allowed,true))return false;$perms=array_values(array_intersect(array_map('sanitize_key',(array)($c['permissions']??array())),$allowed));return in_array($permission,$perms,true);}
