@@ -75,6 +75,7 @@ add_filter('body_class', 'tuff_beatz_body_player_class');
 require_once get_template_directory() . '/inc/private-file-vault.php';
 require_once get_template_directory() . '/inc/project-portal.php';
 require_once get_template_directory() . '/inc/project-dashboard.php';
+require_once get_template_directory() . '/inc/final-delivery-guard.php';
 require_once get_template_directory() . '/inc/project-invoicing.php';
 require_once get_template_directory() . '/inc/portal-hubs.php';
 require_once get_template_directory() . '/inc/project-notifications.php';
