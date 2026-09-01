@@ -1,7 +1,11 @@
 <?php
 if(!defined('ABSPATH'))exit;
-/** TUFF BEATZ V8.5+ — Producer + Client Portal Hubs / Luxury Studio OS */
-function tuff_beatz_is_producer_user($uid=0){$u=$uid?get_user_by('id',$uid):wp_get_current_user();return $u&&$u->exists()&&(user_can($u,'edit_posts')||user_can($u,'manage_options'));}
+/** TUFF BEATZ V8.6 — Producer + Client Portal Hubs / Luxury Studio OS */
+function tuff_beatz_producer_session_action($uid){return 'tb_producer_session_'.(int)$uid;}
+function tuff_beatz_producer_session_token($uid=0){$uid=$uid?:get_current_user_id();return $uid?wp_create_nonce(tuff_beatz_producer_session_action($uid)):'';}
+function tuff_beatz_has_producer_session_token($uid=0){$uid=$uid?:get_current_user_id();if(!$uid||$uid!==get_current_user_id())return false;$token=sanitize_text_field(wp_unslash($_GET['tb_producer_session']??''));return $token&&wp_verify_nonce($token,tuff_beatz_producer_session_action($uid));}
+function tuff_beatz_is_producer_user($uid=0){$u=$uid?get_user_by('id',$uid):wp_get_current_user();if(!$u||!$u->exists())return false;$legacy=user_can($u,'edit_posts')||user_can($u,'manage_options');if($legacy)return true;return (int)$u->ID===get_current_user_id()&&tuff_beatz_has_producer_session_token((int)$u->ID);}
+function tuff_beatz_producer_workspace_url($id,$anchor=''){$url=add_query_arg(array('project'=>(int)$id,'tb_producer_session'=>tuff_beatz_producer_session_token()),home_url('/project-dashboard/'));if($anchor)$url.='#'.ltrim($anchor,'#');return $url;}
 function tuff_beatz_portal_hub_setup(){
  $pages=array('producer-portal'=>array('Producer Portal','page-producer-portal.php'),'client-portal'=>array('Client Portal','page-client-portal.php'));
  foreach($pages as $slug=>$data){$p=get_page_by_path($slug);if(!$p){$id=wp_insert_post(array('post_title'=>$data[0],'post_name'=>$slug,'post_status'=>'publish','post_type'=>'page','post_content'=>''));if(!is_wp_error($id)&&$id)update_post_meta($id,'_wp_page_template',$data[1]);}else update_post_meta($p->ID,'_wp_page_template',$data[1]);}
