@@ -109,6 +109,7 @@ require_once get_template_directory() . '/inc/business-kpi-control.php';
 require_once get_template_directory() . '/inc/strategic-intelligence.php';
 require_once get_template_directory() . '/inc/strategic-risk-opportunity.php';
 require_once get_template_directory() . '/inc/strategic-planning.php';
+require_once get_template_directory() . '/inc/strategic-execution-control.php';
 function tuff_beatz_v14_proposal_assets(){if(is_page('proposal')){$p=get_template_directory().'/assets/css/business-proposal.css';wp_enqueue_style('tuff-beatz-business-proposal',get_template_directory_uri().'/assets/css/business-proposal.css',array('tuff-beatz-v34-parity'),file_exists($p)?filemtime($p):wp_get_theme()->get('Version'));}}
 add_action('wp_enqueue_scripts','tuff_beatz_v14_proposal_assets',70);
 function tuff_beatz_v145_contract_assets(){if(is_page('contract')){$p=get_template_directory().'/assets/css/business-contract.css';wp_enqueue_style('tuff-beatz-business-contract',get_template_directory_uri().'/assets/css/business-contract.css',array('tuff-beatz-v34-parity'),file_exists($p)?filemtime($p):wp_get_theme()->get('Version'));}}
