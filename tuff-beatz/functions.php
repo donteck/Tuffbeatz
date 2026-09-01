@@ -23,3 +23,4 @@ require_once get_template_directory().'/inc/workflow-automation.php';
 require_once get_template_directory().'/inc/producer-audio-console.php';
 require_once get_template_directory().'/inc/activity-intelligence.php';
 require_once get_template_directory().'/inc/production-hardening.php';
+require_once get_template_directory().'/inc/permission-hardening.php';
