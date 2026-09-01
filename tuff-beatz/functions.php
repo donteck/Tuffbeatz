@@ -26,3 +26,4 @@ require_once get_template_directory().'/inc/production-hardening.php';
 require_once get_template_directory().'/inc/permission-hardening.php';
 require_once get_template_directory().'/inc/data-integrity.php';
 require_once get_template_directory().'/inc/event-deduplication.php';
+require_once get_template_directory().'/inc/runtime-health.php';
