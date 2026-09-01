@@ -1,13 +1,15 @@
 <?php
 if(!defined('ABSPATH'))exit;
-/** TUFF BEATZ Final Delivery Guard V12.11 — owner authority + real master/final evidence */
+/** TUFF BEATZ Final Delivery Guard V12.12 — owner authority + canonical master/final evidence */
 function tuff_beatz_delivery_confirmation_authorized($request_id,$user_id=0){
  $request_id=(int)$request_id;$user_id=$user_id?:get_current_user_id();if(!$request_id||!$user_id)return false;$p=get_post($request_id);if(!$p||$p->post_type!=='tb_request')return false;
  if(user_can($user_id,'edit_post',$request_id))return false;
  return (int)$p->post_author===(int)$user_id;
 }
 function tuff_beatz_delivery_file_is_final_evidence($request_id,$file){
- if(!is_array($file)||!empty($file['archived']))return false;$studio=sanitize_key($file['studio_category']??'');if(in_array($studio,array('masters','final'),true))return true;
+ if(!is_array($file)||!empty($file['archived']))return false;
+ if(function_exists('tuff_beatz_vault_asset_type')){$type=tuff_beatz_vault_asset_type($file);if(in_array($type,array('master','final'),true))return true;}
+ $studio=sanitize_key($file['studio_category']??'');if(in_array($studio,array('masters','final'),true))return true;
  $fid=(string)($file['id']??'');$states=get_post_meta((int)$request_id,'_tb_mix_review_status',true);$state=is_array($states)&&$fid&&isset($states[$fid])?sanitize_key($states[$fid]):'';if(in_array($state,array('master','final'),true))return true;
  if(($file['category']??'')!=='delivery')return false;$label=strtolower(trim((string)($file['version']??'').' '.(string)($file['name']??'')));if(!preg_match('/\b(final|master|mastered)\b/',$label))return false;
  return in_array($state,array('producer-delivery','approved','master','final'),true)||$state==='';
