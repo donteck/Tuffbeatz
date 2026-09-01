@@ -30,3 +30,6 @@ require_once get_template_directory().'/inc/runtime-health.php';
 require_once get_template_directory().'/inc/release-candidate.php';
 require_once get_template_directory().'/inc/business-opportunities.php';
 require_once get_template_directory().'/inc/business-command.php';
+require_once get_template_directory().'/inc/business-proposals.php';
+function tuff_beatz_v14_proposal_assets(){if(is_page('proposal')){$p=get_template_directory().'/assets/css/business-proposal.css';wp_enqueue_style('tuff-beatz-business-proposal',get_template_directory_uri().'/assets/css/business-proposal.css',array('tuff-beatz-v34-parity'),file_exists($p)?filemtime($p):wp_get_theme()->get('Version'));}}
+add_action('wp_enqueue_scripts','tuff_beatz_v14_proposal_assets',70);
