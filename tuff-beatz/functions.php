@@ -25,3 +25,4 @@ require_once get_template_directory().'/inc/activity-intelligence.php';
 require_once get_template_directory().'/inc/production-hardening.php';
 require_once get_template_directory().'/inc/permission-hardening.php';
 require_once get_template_directory().'/inc/data-integrity.php';
+require_once get_template_directory().'/inc/event-deduplication.php';
