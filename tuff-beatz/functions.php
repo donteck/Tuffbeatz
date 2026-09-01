@@ -97,6 +97,7 @@ require_once get_template_directory() . '/inc/release-candidate.php';
 require_once get_template_directory() . '/inc/production-verification.php';
 require_once get_template_directory() . '/inc/production-readiness-gate.php';
 require_once get_template_directory() . '/inc/production-verification-snapshots.php';
+require_once get_template_directory() . '/inc/production-verification-history.php';
 require_once get_template_directory() . '/inc/business-opportunities.php';
 require_once get_template_directory() . '/inc/business-command.php';
 require_once get_template_directory() . '/inc/business-proposals.php';
