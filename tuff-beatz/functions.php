@@ -94,6 +94,7 @@ require_once get_template_directory() . '/inc/data-integrity.php';
 require_once get_template_directory() . '/inc/event-deduplication.php';
 require_once get_template_directory() . '/inc/runtime-health.php';
 require_once get_template_directory() . '/inc/release-candidate.php';
+require_once get_template_directory() . '/inc/production-verification.php';
 require_once get_template_directory() . '/inc/business-opportunities.php';
 require_once get_template_directory() . '/inc/business-command.php';
 require_once get_template_directory() . '/inc/business-proposals.php';
