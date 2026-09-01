@@ -1,11 +1,27 @@
 <?php
 if(!defined('ABSPATH'))exit;
-/** TUFF BEATZ V8.6 — Producer + Client Portal Hubs / Luxury Studio OS */
+/** TUFF BEATZ V8.6.1 — Producer + Client Portal Hubs / Luxury Studio OS */
 function tuff_beatz_producer_session_action($uid){return 'tb_producer_session_'.(int)$uid;}
 function tuff_beatz_producer_session_token($uid=0){$uid=$uid?:get_current_user_id();return $uid?wp_create_nonce(tuff_beatz_producer_session_action($uid)):'';}
 function tuff_beatz_has_producer_session_token($uid=0){$uid=$uid?:get_current_user_id();if(!$uid||$uid!==get_current_user_id())return false;$token=sanitize_text_field(wp_unslash($_GET['tb_producer_session']??''));return $token&&wp_verify_nonce($token,tuff_beatz_producer_session_action($uid));}
 function tuff_beatz_is_producer_user($uid=0){$u=$uid?get_user_by('id',$uid):wp_get_current_user();if(!$u||!$u->exists())return false;$legacy=user_can($u,'edit_posts')||user_can($u,'manage_options');if($legacy)return true;return (int)$u->ID===get_current_user_id()&&tuff_beatz_has_producer_session_token((int)$u->ID);}
 function tuff_beatz_producer_workspace_url($id,$anchor=''){$url=add_query_arg(array('project'=>(int)$id,'tb_producer_session'=>tuff_beatz_producer_session_token()),home_url('/project-dashboard/'));if($anchor)$url.='#'.ltrim($anchor,'#');return $url;}
+function tuff_beatz_project_dashboard_access_gate(){
+ if(!is_page('project-dashboard'))return;
+ $id=(int)($_GET['project']??0);
+ if(!is_user_logged_in()){
+  $target=$id?add_query_arg('project',$id,home_url('/project-dashboard/')):home_url('/project-dashboard/');
+  wp_safe_redirect(wp_login_url($target));exit;
+ }
+ if(!$id){wp_safe_redirect(home_url('/start-a-project/'));exit;}
+ $allowed=function_exists('tuff_beatz_auth_can')?tuff_beatz_auth_can($id,'view'): (function_exists('tuff_beatz_user_can_view_request')&&tuff_beatz_user_can_view_request($id));
+ if(!$allowed){wp_safe_redirect(home_url('/start-a-project/'));exit;}
+ if(isset($_GET['tb_producer_session'])&&!tuff_beatz_has_producer_session_token(get_current_user_id())){
+  $clean=remove_query_arg('tb_producer_session');
+  wp_safe_redirect($clean);exit;
+ }
+}
+add_action('template_redirect','tuff_beatz_project_dashboard_access_gate',0);
 function tuff_beatz_portal_hub_setup(){
  $pages=array('producer-portal'=>array('Producer Portal','page-producer-portal.php'),'client-portal'=>array('Client Portal','page-client-portal.php'));
  foreach($pages as $slug=>$data){$p=get_page_by_path($slug);if(!$p){$id=wp_insert_post(array('post_title'=>$data[0],'post_name'=>$slug,'post_status'=>'publish','post_type'=>'page','post_content'=>''));if(!is_wp_error($id)&&$id)update_post_meta($id,'_wp_page_template',$data[1]);}else update_post_meta($p->ID,'_wp_page_template',$data[1]);}
