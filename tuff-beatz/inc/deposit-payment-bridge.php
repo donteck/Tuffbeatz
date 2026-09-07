@@ -1,16 +1,22 @@
 <?php
 if(!defined('ABSPATH'))exit;
 /**
- * TUFF BEATZ — Deposit / Payment Bridge V1.0
+ * TUFF BEATZ — Deposit / Payment Bridge V1.1
  * Connects an accepted opportunity contract + verified deposit to an EXISTING
  * canonical tb_request created by the live Start a Project portal.
+ *
+ * V1.1 additionally synchronizes the production timeline after financial clearance:
+ * - Deposit Paid -> Completed
+ * - Stems / Source Files Due -> In Progress (when still pending)
+ * - records canonical V8 activity
  *
  * Important boundaries:
  * - does not create a duplicate production request when one already exists;
  * - does not verify a deposit automatically;
  * - does not call an external gateway;
  * - does not bypass contract acceptance;
- * - activation requires producer action after deposit verification.
+ * - activation requires producer action after deposit verification;
+ * - does not mark Production completed or bypass source-file requirements.
  */
 function tuff_beatz_deposit_bridge_is_producer(){
     return is_user_logged_in()&&function_exists('tuff_beatz_is_producer_user')&&tuff_beatz_is_producer_user();
@@ -67,11 +73,29 @@ function tuff_beatz_deposit_bridge_sync_commercial_record($opportunity_id,$reque
             'accepted_at'=>$contract_acceptance['accepted_at']??current_time('mysql'),
             'quote_version'=>$p['version']??'',
             'contract_version'=>$contract['version']??'',
-            'source'=>'Studio Business OS Deposit Bridge V1.0',
+            'source'=>'Studio Business OS Deposit Bridge V1.1',
         );
         update_post_meta($request_id,'_tb_quote_acceptance',$accept);
         update_post_meta($request_id,'_tb_contract_acceptance',$accept);
     }
+}
+function tuff_beatz_deposit_bridge_sync_milestones($request_id){
+    if(!function_exists('tuff_beatz_ensure_milestones'))return false;
+    $milestones=tuff_beatz_ensure_milestones($request_id);
+    $changed=false;$deposit_changed=false;$source_changed=false;
+    foreach($milestones as &$milestone){
+        $title=(string)($milestone['title']??'');
+        if($title==='Deposit Paid'&&($milestone['status']??'pending')!=='completed'){
+            $milestone['status']='completed';$changed=true;$deposit_changed=true;
+        }elseif($title==='Stems / Source Files Due'&&($milestone['status']??'pending')==='pending'){
+            $milestone['status']='in-progress';$changed=true;$source_changed=true;
+        }
+    }
+    unset($milestone);
+    if($changed)update_post_meta($request_id,'_tb_milestones_v8',$milestones);
+    if($deposit_changed&&function_exists('tuff_beatz_add_activity'))tuff_beatz_add_activity($request_id,'milestone','Deposit Paid → Completed');
+    if($source_changed&&function_exists('tuff_beatz_add_activity'))tuff_beatz_add_activity($request_id,'milestone','Stems / Source Files Due → In Progress');
+    return $changed;
 }
 function tuff_beatz_deposit_bridge_activate($opportunity_id){
     $opportunity_id=(int)$opportunity_id;
@@ -79,7 +103,7 @@ function tuff_beatz_deposit_bridge_activate($opportunity_id){
     if(!$request_id)return new WP_Error('request_missing','No linked Start a Project request exists.');
     if(!tuff_beatz_deposit_bridge_ready($opportunity_id))return new WP_Error('deposit_not_ready','Accepted contract and a fully verified deposit are required.');
     $already=(string)get_post_meta($request_id,'_tb_deposit_bridge_activated_at',true);
-    if($already)return $request_id;
+    if($already){tuff_beatz_deposit_bridge_sync_milestones($request_id);return $request_id;}
 
     $deposit=tuff_beatz_v146_deposit_data($opportunity_id);
     $amount=(float)($deposit['amount']??0);
@@ -111,6 +135,7 @@ function tuff_beatz_deposit_bridge_activate($opportunity_id){
     update_post_meta($request_id,'_tb_v14_source_opportunity_id',$opportunity_id);
     update_post_meta($request_id,'_tb_deposit_bridge_activated_at',current_time('mysql'));
     update_post_meta($request_id,'_tb_deposit_bridge_activated_by',get_current_user_id());
+    tuff_beatz_deposit_bridge_sync_milestones($request_id);
 
     update_post_meta($opportunity_id,'_tb_v14_stage','won');
     update_post_meta($opportunity_id,'_tb_v14_probability',100);
@@ -118,11 +143,7 @@ function tuff_beatz_deposit_bridge_activate($opportunity_id){
     update_post_meta($opportunity_id,'_tb_v146_converted_by',get_current_user_id());
 
     if(function_exists('tuff_beatz_v14_add_opportunity_activity'))tuff_beatz_v14_add_opportunity_activity($opportunity_id,'conversion','Verified deposit activated existing production request #'.$request_id.' without duplication');
-    if(function_exists('tuff_beatz_project_activity')){
-        $activity=get_post_meta($request_id,'_tb_project_activity',true);if(!is_array($activity))$activity=array();
-        $activity[]=array('type'=>'payment','message'=>'Deposit verified and project financially cleared for production','time'=>current_time('mysql'));
-        update_post_meta($request_id,'_tb_project_activity',$activity);
-    }
+    if(function_exists('tuff_beatz_add_activity'))tuff_beatz_add_activity($request_id,'payment','Deposit verified and project financially cleared for production');
     return $request_id;
 }
 function tuff_beatz_deposit_bridge_action(){
@@ -131,7 +152,7 @@ function tuff_beatz_deposit_bridge_action(){
     if(!$id||!isset($_POST['tb_deposit_bridge_nonce'])||!wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['tb_deposit_bridge_nonce'])),'tb_deposit_bridge_'.$id))wp_die('Invalid request.',400);
     $result=tuff_beatz_deposit_bridge_activate($id);
     if(is_wp_error($result)){wp_safe_redirect(add_query_arg('deposit_bridge_error',rawurlencode($result->get_error_code()),get_edit_post_link($id,'url')));exit;}
-    wp_safe_redirect(function_exists('tuff_beatz_producer_workspace_url')?tuff_beatz_producer_workspace_url($result,'payments'):tuff_beatz_project_dashboard_url($result));exit;
+    wp_safe_redirect(function_exists('tuff_beatz_producer_workspace_url')?tuff_beatz_producer_workspace_url($result,'timeline'):tuff_beatz_project_dashboard_url($result));exit;
 }
 add_action('admin_post_tb_deposit_bridge_activate','tuff_beatz_deposit_bridge_action');
 function tuff_beatz_deposit_bridge_box($post){
@@ -143,9 +164,9 @@ function tuff_beatz_deposit_bridge_box($post){
     $activated=(string)get_post_meta($request_id,'_tb_deposit_bridge_activated_at',true);
     echo '<p><strong>Existing intake project:</strong> #'.esc_html($request_id).'</p>';
     echo '<p><strong>Contract:</strong> '.esc_html(($contract['decision']??'')==='accepted'?'Accepted':'Not accepted').'<br><strong>Deposit:</strong> '.esc_html(strtoupper($deposit['status']??'due')).'<br><strong>Expected:</strong> '.esc_html(function_exists('tuff_beatz_money')?tuff_beatz_money($expected):'$'.number_format($expected,2)).'<br><strong>Recorded:</strong> '.esc_html(function_exists('tuff_beatz_money')?tuff_beatz_money((float)($deposit['amount']??0)):'$'.number_format((float)($deposit['amount']??0),2)).'</p>';
-    if($activated){echo '<p><strong>Financially cleared.</strong><br><small>'.esc_html($activated).'</small></p><p><a class="button button-primary" href="'.esc_url(function_exists('tuff_beatz_producer_workspace_url')?tuff_beatz_producer_workspace_url($request_id,'payments'):tuff_beatz_project_dashboard_url($request_id)).'">Open Project Payments</a></p>';return;}
+    if($activated){echo '<p><strong>Financially cleared.</strong><br><small>'.esc_html($activated).'</small></p><p><a class="button button-primary" href="'.esc_url(function_exists('tuff_beatz_producer_workspace_url')?tuff_beatz_producer_workspace_url($request_id,'timeline'):tuff_beatz_project_dashboard_url($request_id)).'">Open Production Timeline</a></p>';return;}
     if(!tuff_beatz_deposit_bridge_ready($post->ID)){echo '<p>Activation stays locked until the contract is accepted and the full required deposit is marked verified.</p>';return;}
-    echo '<p>This will record the verified deposit against the existing intake project and move it to Approved. It will not create a duplicate project.</p><form method="post" action="'.esc_url(admin_url('admin-post.php')).'"><input type="hidden" name="action" value="tb_deposit_bridge_activate"><input type="hidden" name="opportunity_id" value="'.esc_attr($post->ID).'">';wp_nonce_field('tb_deposit_bridge_'.$post->ID,'tb_deposit_bridge_nonce');echo '<button class="button button-primary" type="submit">Activate Existing Project</button></form>';
+    echo '<p>This will record the verified deposit against the existing intake project, mark Deposit Paid complete, open the source-file stage, and move the project to Approved. It will not create a duplicate project.</p><form method="post" action="'.esc_url(admin_url('admin-post.php')).'"><input type="hidden" name="action" value="tb_deposit_bridge_activate"><input type="hidden" name="opportunity_id" value="'.esc_attr($post->ID).'">';wp_nonce_field('tb_deposit_bridge_'.$post->ID,'tb_deposit_bridge_nonce');echo '<button class="button button-primary" type="submit">Activate Existing Project</button></form>';
 }
 function tuff_beatz_deposit_bridge_metabox(){add_meta_box('tb_deposit_bridge','TUFF BEATZ — Existing Project Activation','tuff_beatz_deposit_bridge_box','tb_opportunity','side','high');}
 add_action('add_meta_boxes_tb_opportunity','tuff_beatz_deposit_bridge_metabox');
