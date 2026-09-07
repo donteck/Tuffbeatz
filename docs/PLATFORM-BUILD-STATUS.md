@@ -27,13 +27,13 @@ TUFF BEATZ is beyond the website-prototype stage but is not yet a finished produ
 | Messaging / notifications | Built | 80% |
 | Mix Review | Functional foundation | 75% |
 | Final Delivery Engine | Strong foundation | 90% |
-| CRM | Built foundation | 80% |
+| CRM | Built / intake-connected foundation | 85% |
 | Workflow automation | Built foundation | 80% |
 | Business OS | Major architecture built | 80% |
 | Strategic Intelligence | Code foundation built | 75% |
 | V16 Verification | Built; runtime validation incomplete | 75% |
 | Site Editor | Saved / paused | 70% |
-| Start a Project / Intake experience | Needs major public build | 50% |
+| Start a Project / Intake experience | Working intake-to-proposal foundation | 75% |
 | Native payments | Not complete | 25% |
 | Certified e-sign contracts | Not complete | 20% |
 | True cross-page audio | Not complete | 30% |
@@ -92,9 +92,13 @@ TUFF BEATZ is beyond the website-prototype stage but is not yet a finished produ
 
 ### CRM, Workflow and Business OS
 - Client CRM foundation exists.
+- The canonical `/start-a-project/` production portal submits `tb_request` records into the producer review queue.
+- Producer intake review can qualify a `tb_request` into a linked `tb_opportunity` without creating a contract, invoice, charge or active production project.
+- Intake Review V1.1 adds an explicit producer action to **Qualify + Prepare Proposal**, linking the working intake directly into the structured proposal engine while preserving separate send/accept/contract controls.
+- Proposal drafts carry qualified opportunity context, intake details, pricing estimate, deposit percentage and expiration into a producer-editable draft.
 - Workflow automation and activity intelligence foundations exist.
 - Business OS includes Business Command, Opportunities, Proposals, Contracts, Conversion, Automation, Forecasting, Profitability, Overhead, Trends, Scorecard, Action Center and KPI Control.
-- Major remaining work is integration, runtime validation and use with real operating data.
+- Major remaining work is contract/payment integration, runtime validation and use with real operating data.
 
 ### Strategic Intelligence and Governance
 - Strategic Intelligence, Risk & Opportunity, Strategic Planning and Strategic Execution Control foundations exist.
@@ -140,9 +144,11 @@ The Site Editor is **paused, not abandoned**. It should later evolve around the 
 The technology behind TUFF BEATZ is currently more mature than the public commercial experience. Public pages/content still need deeper production portfolio, services, credits, releases, collaborations, testimonials and conversion-focused presentation.
 
 ### Start a Project / Intake
-This is a top priority. Target journey:
+The active `/start-a-project/` production portal is working and a real submission has been runtime-confirmed to reach the TUFF BEATZ review queue. The commercial bridge is now implemented through:
 
-Visitor → Work With Me → Choose Service → Project Information → Upload Demo → Budget → Deadline → References → Contact → Submit → Producer Review → CRM → Proposal → Contract → Client Account → Project.
+Visitor → Production Portal → Submit Project + Files → `tb_request` Review Queue → Producer Qualification → Linked CRM Opportunity → Proposal Draft → Proposal Send / Client Decision → Contract.
+
+Remaining work includes browser-validation of the producer qualification/proposal handoff, stronger lead-status UX inside Producer CRM, contract handoff, payment/deposit integration and final automatic project activation.
 
 ### Payments
 Project invoicing/payment-state concepts exist, but the final native payment gateway architecture is not complete. Future target includes deposit, gateway confirmation, financial ledger, remaining balance, final payment and delivery eligibility.
@@ -157,15 +163,17 @@ End-to-end browser testing remains necessary for producer/client isolation, uplo
 
 - **Technology Foundation:** ~90%
 - **Studio / Business Application:** ~80%
-- **Finished Customer-Facing Business:** ~55–60%
+- **Finished Customer-Facing Business:** ~60%
 
 The backend is ahead of the public commercial experience.
 
 ## Current Development Priority
 
-Temporarily stop expanding internal systems and Site Editor. Complete the commercial customer journey:
+Continue the commercial customer journey:
 
 **Public Website → Start a Project → Professional Intake → CRM Opportunity → Quote / Proposal → Contract → Deposit / Payment → Automatic Project Creation → Client Portal → Production Workspace → Mix Review → Final Payment → Final Delivery**
+
+The current milestone reaches the **Proposal Draft** stage. The next major commercial milestone is **Contract handoff after proposal acceptance**, followed by **Deposit / Payment**.
 
 After the full journey works end-to-end, return to:
 
