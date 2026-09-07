@@ -77,6 +77,8 @@ require_once get_template_directory() . '/inc/site-editor-media.php';
 require_once get_template_directory() . '/inc/site-editor-sections.php';
 require_once get_template_directory() . '/inc/site-editor-global.php';
 require_once get_template_directory() . '/inc/site-editor-registry.php';
+require_once get_template_directory() . '/inc/site-editor-revisions.php';
+require_once get_template_directory() . '/inc/site-editor-workflow.php';
 require_once get_template_directory() . '/inc/private-file-vault.php';
 require_once get_template_directory() . '/inc/canonical-asset-bridge.php';
 require_once get_template_directory() . '/inc/project-portal.php';
