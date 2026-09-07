@@ -1,16 +1,16 @@
 <?php
 /**
- * TUFF BEATZ — Start a Project V1.0
- * Public intake page. Stores qualified submissions as draft tb_project records
- * for producer review without touching protected Studio OS permissions.
+ * TUFF BEATZ — Start a Project V1.1
+ * Canonical public intake page. Submissions enter Studio OS as tb_request records.
  */
 if (!defined('ABSPATH')) exit;
+require_once get_template_directory() . '/inc/public-intake-bridge.php';
 
 wp_enqueue_style(
     'tuff-beatz-start-project',
     get_template_directory_uri() . '/assets/css/start-a-project.css',
     array(),
-    '1.0.0'
+    '1.1.0'
 );
 
 $tbsp_errors = array();
@@ -21,11 +21,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['tbsp_submit'])) {
         $tbsp_errors[] = 'Your session expired. Please refresh the page and try again.';
     }
 
-    // Honeypot. Real visitors never fill this field.
     $website = isset($_POST['website']) ? trim((string) wp_unslash($_POST['website'])) : '';
-    if ($website !== '') {
-        $tbsp_errors[] = 'Unable to submit this request.';
-    }
+    if ($website !== '') $tbsp_errors[] = 'Unable to submit this request.';
 
     $name        = isset($_POST['name']) ? sanitize_text_field(wp_unslash($_POST['name'])) : '';
     $artist_name = isset($_POST['artist_name']) ? sanitize_text_field(wp_unslash($_POST['artist_name'])) : '';
@@ -45,41 +42,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['tbsp_submit'])) {
     if ($message === '') $tbsp_errors[] = 'Tell me a little about your project.';
 
     if (!$tbsp_errors) {
-        $display_project = $project !== '' ? $project : ($artist_name !== '' ? $artist_name : $name);
-        $post_id = wp_insert_post(array(
-            'post_type'   => 'tb_project',
-            'post_status' => 'draft',
-            'post_title'  => 'INTAKE — ' . $display_project,
-            'post_content'=> $message,
-            'post_author' => 0,
-        ), true);
+        $request_id = tuff_beatz_create_public_intake_request(array(
+            'name'=>$name,'artist_name'=>$artist_name,'email'=>$email,'phone'=>$phone,
+            'service'=>$service,'project_name'=>$project,'genre'=>$genre,'budget'=>$budget,
+            'timeline'=>$timeline,'reference_url'=>$reference,'message'=>$message,
+        ));
 
-        if (is_wp_error($post_id)) {
+        if (is_wp_error($request_id) || !$request_id) {
             $tbsp_errors[] = 'Your request could not be saved. Please try again.';
         } else {
-            update_post_meta($post_id, '_tb_intake_request', 1);
-            update_post_meta($post_id, '_tb_intake_status', 'reviewing');
-            update_post_meta($post_id, '_tb_client_name', $name);
-            update_post_meta($post_id, '_tb_artist_name', $artist_name);
-            update_post_meta($post_id, '_tb_client_email', $email);
-            update_post_meta($post_id, '_tb_client_phone', $phone);
-            update_post_meta($post_id, '_tb_service', $service);
-            update_post_meta($post_id, '_tb_genre', $genre);
-            update_post_meta($post_id, '_tb_budget', $budget);
-            update_post_meta($post_id, '_tb_timeline', $timeline);
-            update_post_meta($post_id, '_tb_reference_url', $reference);
-            update_post_meta($post_id, '_tb_intake_submitted_at', current_time('mysql'));
-
             $admin_email = get_option('admin_email');
             if ($admin_email && is_email($admin_email)) {
                 wp_mail(
                     $admin_email,
                     'TUFF BEATZ — New Project Intake',
-                    "New project request received.\n\nClient: {$name}\nArtist: {$artist_name}\nEmail: {$email}\nService: {$service}\nProject: {$project}\nBudget: {$budget}\nTimeline: {$timeline}\n\nReview in WordPress: " . admin_url('post.php?post=' . absint($post_id) . '&action=edit')
+                    "New project request received.\n\nClient: {$name}\nArtist: {$artist_name}\nEmail: {$email}\nService: {$service}\nProject: {$project}\nBudget: {$budget}\nTimeline: {$timeline}\n\nStudio OS record: " . admin_url('post.php?post=' . absint($request_id) . '&action=edit')
                 );
             }
-
-            wp_safe_redirect(add_query_arg('submitted', '1', get_permalink()));
+            wp_safe_redirect(add_query_arg(array('submitted'=>'1','request'=>absint($request_id)), get_permalink()));
             exit;
         }
     }
@@ -106,14 +86,7 @@ get_header();
                 <h2>Built around the record. Not a generic package.</h2>
                 <p>Use this intake to give TUFF BEATZ the creative and business context needed to review your project properly.</p>
                 <div class="tbsp-service-list">
-                    <span>Original Production</span>
-                    <span>Beat Production</span>
-                    <span>Arrangement</span>
-                    <span>Mixing</span>
-                    <span>Mastering</span>
-                    <span>Vocal Production</span>
-                    <span>Song Development</span>
-                    <span>Full Production Package</span>
+                    <span>Original Production</span><span>Beat Production</span><span>Arrangement</span><span>Mixing</span><span>Mastering</span><span>Vocal Production</span><span>Song Development</span><span>Full Production Package</span>
                 </div>
                 <div class="tbsp-note"><strong>What happens next?</strong><br>Your request enters producer review. Qualified projects can move into proposal, contract, client access and Studio OS.</div>
             </aside>
@@ -127,12 +100,7 @@ get_header();
                         <a href="<?php echo esc_url(home_url('/')); ?>">Return to TUFF BEATZ</a>
                     </div>
                 <?php else : ?>
-                    <?php if ($tbsp_errors) : ?>
-                        <div class="tbsp-errors" role="alert">
-                            <?php foreach ($tbsp_errors as $error) : ?><p><?php echo esc_html($error); ?></p><?php endforeach; ?>
-                        </div>
-                    <?php endif; ?>
-
+                    <?php if ($tbsp_errors) : ?><div class="tbsp-errors" role="alert"><?php foreach ($tbsp_errors as $error) : ?><p><?php echo esc_html($error); ?></p><?php endforeach; ?></div><?php endif; ?>
                     <form method="post" class="tbsp-form" novalidate>
                         <?php wp_nonce_field('tbsp_submit_project', 'tbsp_nonce'); ?>
                         <input class="tbsp-hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
@@ -146,47 +114,21 @@ get_header();
                         </div>
 
                         <div class="tbsp-section-head"><span>02</span><div><small>SERVICE</small><h3>What do you need?</h3></div></div>
-                        <div class="tbsp-fields">
-                            <label>Primary Service*
-                                <select name="service" required>
-                                    <option value="">Choose a service</option>
-                                    <?php foreach (array('Original Production','Beat Production','Arrangement','Mixing','Mastering','Vocal Production','Song Development','Full Production Package','Creative / Production Consulting') as $opt) : ?>
-                                        <option value="<?php echo esc_attr($opt); ?>" <?php selected(isset($service) ? $service : '', $opt); ?>><?php echo esc_html($opt); ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </label>
-                        </div>
+                        <div class="tbsp-fields"><label>Primary Service*<select name="service" required><option value="">Choose a service</option><?php foreach (array('Original Production','Beat Production','Arrangement','Mixing','Mastering','Vocal Production','Song Development','Full Production Package','Creative / Production Consulting') as $opt) : ?><option value="<?php echo esc_attr($opt); ?>" <?php selected(isset($service) ? $service : '', $opt); ?>><?php echo esc_html($opt); ?></option><?php endforeach; ?></select></label></div>
 
                         <div class="tbsp-section-head"><span>03</span><div><small>PROJECT</small><h3>Tell me about the record.</h3></div></div>
                         <div class="tbsp-fields tbsp-two">
                             <label>Project / Song Name<input type="text" name="project_name" value="<?php echo isset($project) ? esc_attr($project) : ''; ?>"></label>
                             <label>Genre / Direction<input type="text" name="genre" placeholder="Afrobeats, Konpa, R&B..." value="<?php echo isset($genre) ? esc_attr($genre) : ''; ?>"></label>
-                            <label>Budget Range
-                                <select name="budget">
-                                    <option value="">Select range</option>
-                                    <?php foreach (array('Under $500','$500–$1,000','$1,000–$2,500','$2,500–$5,000','$5,000+','Let’s discuss') as $opt) : ?>
-                                        <option value="<?php echo esc_attr($opt); ?>" <?php selected(isset($budget) ? $budget : '', $opt); ?>><?php echo esc_html($opt); ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </label>
-                            <label>Desired Timeline
-                                <select name="timeline">
-                                    <option value="">Select timeline</option>
-                                    <?php foreach (array('ASAP / Rush','1–2 weeks','2–4 weeks','1–2 months','Flexible') as $opt) : ?>
-                                        <option value="<?php echo esc_attr($opt); ?>" <?php selected(isset($timeline) ? $timeline : '', $opt); ?>><?php echo esc_html($opt); ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </label>
+                            <label>Budget Range<select name="budget"><option value="">Select range</option><?php foreach (array('Under $500','$500–$1,000','$1,000–$2,500','$2,500–$5,000','$5,000+','Let’s discuss') as $opt) : ?><option value="<?php echo esc_attr($opt); ?>" <?php selected(isset($budget) ? $budget : '', $opt); ?>><?php echo esc_html($opt); ?></option><?php endforeach; ?></select></label>
+                            <label>Desired Timeline<select name="timeline"><option value="">Select timeline</option><?php foreach (array('ASAP / Rush','1–2 weeks','2–4 weeks','1–2 months','Flexible') as $opt) : ?><option value="<?php echo esc_attr($opt); ?>" <?php selected(isset($timeline) ? $timeline : '', $opt); ?>><?php echo esc_html($opt); ?></option><?php endforeach; ?></select></label>
                         </div>
                         <div class="tbsp-fields">
                             <label>Reference / Demo Link<input type="url" name="reference_url" placeholder="YouTube, Drive, Dropbox, SoundCloud..." value="<?php echo isset($reference) ? esc_attr($reference) : ''; ?>"></label>
                             <label>Project Brief*<textarea name="message" rows="7" required placeholder="What are you trying to create? What should the listener feel? What stage is the song currently in?"><?php echo isset($message) ? esc_textarea($message) : ''; ?></textarea></label>
                         </div>
 
-                        <div class="tbsp-submit-row">
-                            <p>Submitting this form sends your project into TUFF BEATZ producer review. It does not guarantee acceptance or create a payment obligation.</p>
-                            <button type="submit" name="tbsp_submit" value="1">SUBMIT PROJECT FOR REVIEW <span>→</span></button>
-                        </div>
+                        <div class="tbsp-submit-row"><p>Submitting this form sends your project into TUFF BEATZ producer review. It does not guarantee acceptance or create a payment obligation.</p><button type="submit" name="tbsp_submit" value="1">SUBMIT PROJECT FOR REVIEW <span>→</span></button></div>
                     </form>
                 <?php endif; ?>
             </div>
