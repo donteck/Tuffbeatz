@@ -29,13 +29,13 @@ TUFF BEATZ is beyond the website-prototype stage but is not yet a finished produ
 | Final Delivery Engine | Strong foundation | 90% |
 | CRM | Built / intake-connected foundation | 85% |
 | Workflow automation | Built foundation | 80% |
-| Business OS | Major architecture built | 80% |
+| Business OS | Major architecture built | 82% |
 | Strategic Intelligence | Code foundation built | 75% |
 | V16 Verification | Built; runtime validation incomplete | 75% |
 | Site Editor | Saved / paused | 70% |
-| Start a Project / Intake experience | Working intake-to-proposal foundation | 75% |
+| Start a Project / Intake experience | Working intake-to-contract foundation | 80% |
 | Native payments | Not complete | 25% |
-| Certified e-sign contracts | Not complete | 20% |
+| Certified e-sign contracts | Platform acceptance only; not certified e-sign | 35% |
 | True cross-page audio | Not complete | 30% |
 | Full browser/security validation | Incomplete | 60% |
 
@@ -96,9 +96,13 @@ TUFF BEATZ is beyond the website-prototype stage but is not yet a finished produ
 - Producer intake review can qualify a `tb_request` into a linked `tb_opportunity` without creating a contract, invoice, charge or active production project.
 - Intake Review V1.1 adds an explicit producer action to **Qualify + Prepare Proposal**, linking the working intake directly into the structured proposal engine while preserving separate send/accept/contract controls.
 - Proposal drafts carry qualified opportunity context, intake details, pricing estimate, deposit percentage and expiration into a producer-editable draft.
+- Proposal acceptance advances the commercial opportunity to the Contract stage only.
+- Contract Workflow V1.0 can now prepare a versioned contract draft from an accepted proposal. It preloads the accepted commercial summary, deposit amount, proposal-linked scope, start conditions and platform-acceptance disclosure for producer review.
+- Contract preparation does **not** send the agreement, record acceptance, create an invoice, charge the client or activate production.
+- Existing contract delivery remains a separate producer action. Client platform acceptance is version-bound and advances the opportunity to **Deposit Due** only.
 - Workflow automation and activity intelligence foundations exist.
 - Business OS includes Business Command, Opportunities, Proposals, Contracts, Conversion, Automation, Forecasting, Profitability, Overhead, Trends, Scorecard, Action Center and KPI Control.
-- Major remaining work is contract/payment integration, runtime validation and use with real operating data.
+- Major remaining work is deposit/payment integration, runtime validation and use with real operating data.
 
 ### Strategic Intelligence and Governance
 - Strategic Intelligence, Risk & Opportunity, Strategic Planning and Strategic Execution Control foundations exist.
@@ -116,6 +120,7 @@ TUFF BEATZ is beyond the website-prototype stage but is not yet a finished produ
 - Hestia account is SFTP-only; no normal shell access.
 - Deployment target: `web/tuffbeatz.com/public_html/wp-content/themes/tuff-beatz`.
 - Deployment pipeline has been successfully verified.
+- Contract Workflow V1.0 module deployment and activation deployment completed successfully in GitHub Actions runs #333 and #334. Runtime/browser validation remains pending.
 
 ## Paused: Site Editor
 
@@ -146,24 +151,24 @@ The technology behind TUFF BEATZ is currently more mature than the public commer
 ### Start a Project / Intake
 The active `/start-a-project/` production portal is working and a real submission has been runtime-confirmed to reach the TUFF BEATZ review queue. The commercial bridge is now implemented through:
 
-Visitor → Production Portal → Submit Project + Files → `tb_request` Review Queue → Producer Qualification → Linked CRM Opportunity → Proposal Draft → Proposal Send / Client Decision → Contract.
+Visitor → Production Portal → Submit Project + Files → `tb_request` Review Queue → Producer Qualification → Linked CRM Opportunity → Proposal Draft → Proposal Send / Client Decision → Contract Draft → Contract Send / Client Decision → Deposit Due.
 
-Remaining work includes browser-validation of the producer qualification/proposal handoff, stronger lead-status UX inside Producer CRM, contract handoff, payment/deposit integration and final automatic project activation.
+Remaining work includes browser-validation of the producer qualification/proposal/contract handoff, stronger lead-status UX inside Producer CRM, payment/deposit integration and final automatic project activation.
 
 ### Payments
 Project invoicing/payment-state concepts exist, but the final native payment gateway architecture is not complete. Future target includes deposit, gateway confirmation, financial ledger, remaining balance, final payment and delivery eligibility.
 
 ### Contracts / E-Sign
-Proposal and contract architecture exists, but current acceptance must not be represented as equivalent to a certified e-signature platform. Future target: Contract → Signature → Audit Trail → Signed PDF → Project.
+Proposal-to-contract handoff and versioned platform acceptance now exist. Current acceptance must **not** be represented as equivalent to a certified electronic-signature platform. Future enhancements may include third-party e-sign integration, stronger audit-trail export and signed-PDF generation if required.
 
 ### Full Runtime Validation
-End-to-end browser testing remains necessary for producer/client isolation, uploads/downloads, messages, Mix Review, approval, Final Delivery, verification evidence and readiness decisions.
+End-to-end browser testing remains necessary for producer/client isolation, uploads/downloads, proposal handoff, contract handoff, messages, Mix Review, approval, Final Delivery, verification evidence and readiness decisions.
 
 ## Current Layer Assessment
 
 - **Technology Foundation:** ~90%
-- **Studio / Business Application:** ~80%
-- **Finished Customer-Facing Business:** ~60%
+- **Studio / Business Application:** ~82%
+- **Finished Customer-Facing Business:** ~62%
 
 The backend is ahead of the public commercial experience.
 
@@ -173,7 +178,7 @@ Continue the commercial customer journey:
 
 **Public Website → Start a Project → Professional Intake → CRM Opportunity → Quote / Proposal → Contract → Deposit / Payment → Automatic Project Creation → Client Portal → Production Workspace → Mix Review → Final Payment → Final Delivery**
 
-The current milestone reaches the **Proposal Draft** stage. The next major commercial milestone is **Contract handoff after proposal acceptance**, followed by **Deposit / Payment**.
+The current milestone reaches the **Contract / Deposit Due handoff foundation**. The next major commercial milestone is **Deposit / Payment**, followed by **controlled automatic project activation** after required commercial conditions are satisfied.
 
 After the full journey works end-to-end, return to:
 
