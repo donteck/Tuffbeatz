@@ -101,3 +101,5 @@ function tuff_beatz_contract_workflow_box($post){
 }
 function tuff_beatz_contract_workflow_metabox(){add_meta_box('tb_contract_workflow','TUFF BEATZ — Contract Workflow','tuff_beatz_contract_workflow_box','tb_opportunity','side','high');}
 add_action('add_meta_boxes_tb_opportunity','tuff_beatz_contract_workflow_metabox');
+
+require_once get_template_directory().'/inc/deposit-payment-bridge.php';
