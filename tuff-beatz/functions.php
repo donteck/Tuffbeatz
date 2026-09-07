@@ -74,6 +74,7 @@ add_filter('body_class', 'tuff_beatz_body_player_class');
 
 require_once get_template_directory() . '/inc/site-editor.php';
 require_once get_template_directory() . '/inc/site-editor-media.php';
+require_once get_template_directory() . '/inc/site-editor-sections.php';
 require_once get_template_directory() . '/inc/private-file-vault.php';
 require_once get_template_directory() . '/inc/canonical-asset-bridge.php';
 require_once get_template_directory() . '/inc/project-portal.php';
