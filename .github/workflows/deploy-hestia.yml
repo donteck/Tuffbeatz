@@ -18,17 +18,22 @@ jobs:
     name: Deploy WordPress Theme
     runs-on: ubuntu-latest
 
+    env:
+      # The Hestia account is SFTP-only. Use a path relative to the Hestia user's home.
+      TUFF_BEATZ_REMOTE_THEME: web/tuffbeatz.com/public_html/wp-content/themes/tuff-beatz
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Configure SSH
+      - name: Configure SSH key
         shell: bash
         env:
           HESTIA_SSH_KEY: ${{ secrets.HESTIA_SSH_KEY }}
           HESTIA_PORT: ${{ secrets.HESTIA_PORT }}
           HESTIA_HOST: ${{ secrets.HESTIA_HOST }}
         run: |
+          set -euo pipefail
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
           printf '%s\n' "$HESTIA_SSH_KEY" | tr -d '\r' > ~/.ssh/id_ed25519
@@ -37,52 +42,49 @@ jobs:
           ssh-keyscan -p "$HESTIA_PORT" "$HESTIA_HOST" >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
-      - name: Test Hestia connection
+      - name: Test Hestia SFTP connection
         shell: bash
         run: |
-          ssh -i ~/.ssh/id_ed25519 \
+          set -euo pipefail
+          printf 'pwd\nls\nquit\n' | sftp \
+            -i ~/.ssh/id_ed25519 \
             -o IdentitiesOnly=yes \
-            -p "${{ secrets.HESTIA_PORT }}" \
-            "${{ secrets.HESTIA_USER }}@${{ secrets.HESTIA_HOST }}" \
-            "echo 'Connected to Hestia successfully'"
+            -P "${{ secrets.HESTIA_PORT }}" \
+            "${{ secrets.HESTIA_USER }}@${{ secrets.HESTIA_HOST }}"
 
-      - name: Backup current theme
+      - name: Verify remote TUFF BEATZ theme directory
         shell: bash
-        env:
-          HESTIA_THEME_PATH: ${{ secrets.HESTIA_THEME_PATH }}
-          HESTIA_BACKUP_PATH: ${{ secrets.HESTIA_BACKUP_PATH }}
         run: |
-          ssh -i ~/.ssh/id_ed25519 \
+          set -euo pipefail
+          printf 'ls %s\nquit\n' "$TUFF_BEATZ_REMOTE_THEME" | sftp \
+            -i ~/.ssh/id_ed25519 \
             -o IdentitiesOnly=yes \
-            -p "${{ secrets.HESTIA_PORT }}" \
-            "${{ secrets.HESTIA_USER }}@${{ secrets.HESTIA_HOST }}" \
-            "THEME_PATH='$HESTIA_THEME_PATH'; BACKUP_PATH='$HESTIA_BACKUP_PATH'; \
-             if [ -d \"\$THEME_PATH\" ]; then \
-               mkdir -p \"\$BACKUP_PATH\"; \
-               PARENT=\$(dirname \"\$THEME_PATH\"); \
-               NAME=\$(basename \"\$THEME_PATH\"); \
-               tar -czf \"\$BACKUP_PATH/tuff-beatz-\$(date +%Y%m%d-%H%M%S).tar.gz\" -C \"\$PARENT\" \"\$NAME\"; \
-             fi"
+            -P "${{ secrets.HESTIA_PORT }}" \
+            "${{ secrets.HESTIA_USER }}@${{ secrets.HESTIA_HOST }}"
 
-      - name: Deploy theme with rsync
+      - name: Deploy theme over SFTP
         shell: bash
         run: |
-          rsync -az --delete \
-            --exclude 'assets/images/' \
-            --exclude 'screenshot.*' \
-            -e "ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes -p ${{ secrets.HESTIA_PORT }}" \
-            tuff-beatz/ \
-            "${{ secrets.HESTIA_USER }}@${{ secrets.HESTIA_HOST }}:${{ secrets.HESTIA_THEME_PATH }}/"
-
-      - name: Fix WordPress permissions
-        shell: bash
-        run: |
-          ssh -i ~/.ssh/id_ed25519 \
+          set -euo pipefail
+          # OpenSSH scp uses the SFTP protocol by default, so it works with an
+          # SFTP-only Hestia account and does not require remote shell access.
+          scp -r \
+            -i ~/.ssh/id_ed25519 \
             -o IdentitiesOnly=yes \
-            -p "${{ secrets.HESTIA_PORT }}" \
-            "${{ secrets.HESTIA_USER }}@${{ secrets.HESTIA_HOST }}" \
-            "find '${{ secrets.HESTIA_THEME_PATH }}' -type d -exec chmod 755 {} \; && \
-             find '${{ secrets.HESTIA_THEME_PATH }}' -type f -exec chmod 644 {} \;"
+            -P "${{ secrets.HESTIA_PORT }}" \
+            tuff-beatz/. \
+            "${{ secrets.HESTIA_USER }}@${{ secrets.HESTIA_HOST }}:$TUFF_BEATZ_REMOTE_THEME/"
+
+      - name: Verify deployed Site Editor
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf 'ls %s/inc/site-editor.php\nls %s/front-page.php\nquit\n' \
+            "$TUFF_BEATZ_REMOTE_THEME" "$TUFF_BEATZ_REMOTE_THEME" | sftp \
+            -i ~/.ssh/id_ed25519 \
+            -o IdentitiesOnly=yes \
+            -P "${{ secrets.HESTIA_PORT }}" \
+            "${{ secrets.HESTIA_USER }}@${{ secrets.HESTIA_HOST }}"
 
       - name: Deployment complete
-        run: echo "TUFF BEATZ theme deployed successfully."
+        run: echo "TUFF BEATZ theme deployed to tuffbeatz.com successfully over SFTP."
