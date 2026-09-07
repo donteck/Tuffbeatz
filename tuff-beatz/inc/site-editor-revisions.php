@@ -33,12 +33,16 @@ function tuff_beatz_editor_revision_snapshot($reason='update'){
     update_option('tuff_beatz_site_editor_revision_history',$history,false);
     $busy=false;
 }
-function tuff_beatz_editor_revision_capture($option,$old,$new){
+function tuff_beatz_editor_revision_capture_updated($option,$old_value,$value){
     if(!in_array($option,tuff_beatz_editor_revision_options(),true)) return;
     tuff_beatz_editor_revision_snapshot($option);
 }
-add_action('updated_option','tuff_beatz_editor_revision_capture',20,3);
-add_action('added_option','tuff_beatz_editor_revision_capture',20,2);
+function tuff_beatz_editor_revision_capture_added($option,$value){
+    if(!in_array($option,tuff_beatz_editor_revision_options(),true)) return;
+    tuff_beatz_editor_revision_snapshot($option);
+}
+add_action('updated_option','tuff_beatz_editor_revision_capture_updated',20,3);
+add_action('added_option','tuff_beatz_editor_revision_capture_added',20,2);
 
 function tuff_beatz_editor_revision_restore(){
     if(!current_user_can('manage_options')) wp_send_json_error(array('message'=>'Unauthorized'),403);
