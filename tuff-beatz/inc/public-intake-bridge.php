@@ -1,8 +1,8 @@
 <?php
 /**
- * TUFF BEATZ — Public Intake Bridge V1.1
- * Converts the public Start a Project form into canonical tb_request records
- * consumed by Producer Command Center / Studio OS.
+ * TUFF BEATZ — Public Intake Bridge V1.2
+ * Normalizes Start a Project intake into canonical tb_request records and exposes
+ * the producer pre-client queue from the same canonical request source.
  */
 if (!defined('ABSPATH')) exit;
 
@@ -81,16 +81,37 @@ function tuff_beatz_create_public_intake_request($data){
     return $request_id;
 }
 
+/**
+ * Canonical producer intake queue.
+ *
+ * V1.2 intentionally does not require the legacy `_tb_public_intake` flag.
+ * The live /start-a-project/ production portal already creates canonical
+ * `tb_request` records, and older submissions (including requests created before
+ * the bridge flag existed) must remain visible to producer review.
+ *
+ * A request leaves this pre-client queue once it is no longer New/Reviewing or
+ * once it has been qualified into a linked CRM opportunity.
+ */
 function tuff_beatz_public_intake_queue($limit=25){
     $q=new WP_Query(array(
         'post_type'=>'tb_request',
         'post_status'=>'publish',
         'posts_per_page'=>max(1,(int)$limit),
-        'orderby'=>'date','order'=>'DESC',
+        'orderby'=>'date',
+        'order'=>'DESC',
         'meta_query'=>array(
             'relation'=>'AND',
-            array('key'=>'_tb_public_intake','value'=>'1'),
-            array('key'=>'_tb_request_status','value'=>array('new','reviewing'),'compare'=>'IN'),
+            array(
+                'key'=>'_tb_request_status',
+                'value'=>array('new','reviewing'),
+                'compare'=>'IN',
+            ),
+            array(
+                'relation'=>'OR',
+                array('key'=>'_tb_intake_opportunity_id','compare'=>'NOT EXISTS'),
+                array('key'=>'_tb_intake_opportunity_id','value'=>'','compare'=>'='),
+                array('key'=>'_tb_intake_opportunity_id','value'=>'0','compare'=>'='),
+            ),
         ),
     ));
     return $q->posts;
