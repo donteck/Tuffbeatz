@@ -112,6 +112,7 @@ require_once get_template_directory() . '/inc/business-command.php';
 require_once get_template_directory() . '/inc/business-proposals.php';
 require_once get_template_directory() . '/inc/proposal-workflow.php';
 require_once get_template_directory() . '/inc/business-contracts.php';
+require_once get_template_directory() . '/inc/contract-workflow.php';
 require_once get_template_directory() . '/inc/business-conversion.php';
 require_once get_template_directory() . '/inc/business-automation.php';
 require_once get_template_directory() . '/inc/business-forecasting.php';
