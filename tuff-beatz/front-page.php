@@ -10,14 +10,15 @@
       <img class="hero-person" src="<?php echo esc_url(get_template_directory_uri() . '/assets/images/emmanuel-tuffet.jpg'); ?>" alt="Emmanuel Tuffet">
     </div>
     <div class="hero-copy">
-      <p class="eyebrow">THE PRODUCER IDENTITY OF</p>
-      <h2 class="producer-name">EMMANUEL TUFFET</h2>
+      <p class="eyebrow"><?php echo esc_html(tuff_beatz_editor_get('hero_eyebrow','THE PRODUCER IDENTITY OF')); ?></p>
+      <h2 class="producer-name"><?php echo esc_html(tuff_beatz_editor_get('hero_name','EMMANUEL TUFFET')); ?></h2>
       <div class="wave-line">⌁⌁⌁⌁⌁</div>
-      <h1>SOUND. PURPOSE.<br><span>LEGACY.</span></h1>
-      <p class="lead">TUFF BEATZ is where music, technology and creativity come together to create timeless records that move people, inspire generations and leave a legacy.</p>
+      <?php $tb_hero_title=tuff_beatz_editor_get('hero_title','SOUND. PURPOSE. LEGACY.'); $tb_hero_parts=preg_split('/\s+/',trim($tb_hero_title)); $tb_hero_last=array_pop($tb_hero_parts); ?>
+      <h1><?php echo esc_html(implode(' ',$tb_hero_parts)); ?><br><span><?php echo esc_html($tb_hero_last); ?></span></h1>
+      <p class="lead"><?php echo esc_html(tuff_beatz_editor_get('hero_lead')); ?></p>
       <div class="hero-actions">
-        <a class="btn btn-gold" href="<?php echo esc_url(tuff_beatz_get('showreel_url', '#music')); ?>">▶ Play Showreel</a>
-        <a class="btn btn-outline" href="#contact">Work With Me</a>
+        <a class="btn btn-gold" href="<?php echo esc_url(tuff_beatz_get('showreel_url', '#music')); ?>">▶ <?php echo esc_html(tuff_beatz_editor_get('hero_primary_label','Play Showreel')); ?></a>
+        <a class="btn btn-outline" href="<?php echo esc_url(tuff_beatz_editor_get('hero_secondary_url','#contact')); ?>"><?php echo esc_html(tuff_beatz_editor_get('hero_secondary_label','Work With Me')); ?></a>
       </div>
     </div>
   </div>
@@ -26,11 +27,12 @@
   </div>
 </section>
 
+<?php if(tuff_beatz_editor_enabled('show_about')): ?>
 <section class="section about" id="about">
   <div class="container two-col">
     <div>
-      <p class="eyebrow">ABOUT</p>
-      <h2>MORE THAN BEATS.<br><span>I BUILD EMOTIONS.</span></h2>
+      <p class="eyebrow"><?php echo esc_html(tuff_beatz_editor_get('about_eyebrow','ABOUT')); ?></p>
+      <h2><?php echo esc_html(tuff_beatz_editor_get('about_title','MORE THAN BEATS. I BUILD EMOTIONS.')); ?></h2>
       <p>Multi-instrumentalist, producer, composer and creative technologist with a passion for sound that connects culture, people and purpose. From the studio to the stage, my mission is simple: to create authentic music with excellence and impact.</p>
       <div class="icon-grid">
         <div><span>♫</span><strong>MULTI-<br>INSTRUMENTALIST</strong></div>
@@ -46,11 +48,13 @@
     </div>
   </div>
 </section>
+<?php endif; ?>
 
+<?php if(tuff_beatz_editor_enabled('show_services')): ?>
 <section class="section services" id="services">
   <div class="container">
-    <p class="eyebrow centered">WHAT I DO</p>
-    <h2 class="centered">PROFESSIONAL MUSIC PRODUCTION</h2>
+    <p class="eyebrow centered"><?php echo esc_html(tuff_beatz_editor_get('services_eyebrow','WHAT I DO')); ?></p>
+    <h2 class="centered"><?php echo esc_html(tuff_beatz_editor_get('services_title','PROFESSIONAL MUSIC PRODUCTION')); ?></h2>
     <div class="service-grid">
       <article><span>🎧</span><h3>Beat Production</h3><p>Custom beats for artists and creators.</p><a href="#contact">Book Production →</a></article>
       <article><span>🎙</span><h3>Recording</h3><p>Professional recording with industry gear.</p><a href="#contact">Book Recording →</a></article>
@@ -61,7 +65,9 @@
     </div>
   </div>
 </section>
+<?php endif; ?>
 
+<?php if(tuff_beatz_editor_enabled('show_featured')): ?>
 <section class="tb-featured section" id="featured-release">
   <div class="container tb-featured__grid">
     <div class="tb-featured__visual">
@@ -80,11 +86,13 @@
     </div>
   </div>
 </section>
+<?php endif; ?>
 
+<?php if(tuff_beatz_editor_enabled('show_music')): ?>
 <section class="section music" id="music">
   <div class="container">
     <div class="music-heading">
-      <div><p class="eyebrow">MUSIC THAT SPEAKS</p><h2>RECENT WORK</h2></div>
+      <div><p class="eyebrow"><?php echo esc_html(tuff_beatz_editor_get('music_eyebrow','MUSIC THAT SPEAKS')); ?></p><h2><?php echo esc_html(tuff_beatz_editor_get('music_title','RECENT WORK')); ?></h2></div>
       <a class="btn btn-gold" href="<?php echo esc_url(tuff_beatz_get('spotify_url', '#music')); ?>" target="_blank" rel="noopener">Listen on All Platforms</a>
     </div>
     <div class="project-grid">
@@ -108,7 +116,9 @@
     </div>
   </div>
 </section>
+<?php endif; ?>
 
+<?php if(tuff_beatz_editor_enabled('show_platforms')): ?>
 <section class="platforms" id="credits">
   <div class="container"><p>TRUSTED BY ARTISTS. STREAMED WORLDWIDE.</p><div class="platform-links">
     <a href="<?php echo esc_url(tuff_beatz_get('spotify_url', '#music')); ?>" target="_blank" rel="noopener">Spotify</a>
@@ -119,5 +129,6 @@
     <a href="<?php echo esc_url(tuff_beatz_get('audiomack_url', '#music')); ?>" target="_blank" rel="noopener">audiomack</a>
   </div></div>
 </section>
+<?php endif; ?>
 </main>
 <?php get_footer(); ?>
