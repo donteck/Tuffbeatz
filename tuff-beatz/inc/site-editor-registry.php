@@ -11,6 +11,7 @@ function tuff_beatz_editor_registry_defaults(){
         'homepage_hero'=>array('label'=>'Homepage Hero','phase'=>'1.3','scope'=>'public','controls'=>array('content','media','layout','responsive-preview')),
         'homepage_sections'=>array('label'=>'Homepage Sections','phase'=>'1.4','scope'=>'public','controls'=>array('visibility','order','headlines')),
         'header_footer'=>array('label'=>'Header & Footer','phase'=>'1.5','scope'=>'public','controls'=>array('logo','subtitle','cta','footer-copy')),
+        'revision_history'=>array('label'=>'Revision History','phase'=>'1.7','scope'=>'public','controls'=>array('snapshots','restore','safety')),
     );
 }
 function tuff_beatz_editor_registry(){
@@ -46,3 +47,5 @@ function tuff_beatz_editor_registry_panel(){
     <?php
 }
 add_action('admin_footer','tuff_beatz_editor_registry_panel',90);
+
+require_once get_template_directory() . '/inc/site-editor-revisions.php';
